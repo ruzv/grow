@@ -8,45 +8,58 @@ import (
 	"math/rand"
 	"os"
 
+	"private/grow/config"
 	"private/grow/render"
 
 	"github.com/faiface/pixel"
 )
 
 type Blob struct {
-	Nodes           map[int]*Node `json:"nodes"`
-	NodesIdentifier int           `json:"nodes_identifier"`
-	Connections     []*Connection `json:"connections"`
-	Units           []*Unit       `json:"units"`
-	UnassignedTasks TaskQueue     `json:"unassigned_tasks"`
-	connected       map[ConnectionIDs]bool
+	nodesIdentifier     int
+	resourcesIdentifier int
+	Nodes               map[int]*Node
+	Connections         []*Connection
+	Units               []*Unit
+	unassignedTasks     *TaskQueue
+	connected           map[ConnectionIDs]bool
+
+	conf *config.Config
 }
 
 type BlobJSON struct {
-	Nodes           map[int]*NodeJSON `json:"nodes"`
-	NodesIdentifier int               `json:"nodes_identifier"`
-	Connections     []*Connection     `json:"connections"`
-	Units           []*Unit           `json:"units"`
-	UnassignedTasks TaskQueue         `json:"unassigned_tasks"`
+	NodesIdentifier     int               `json:"nodes_identifier"`
+	ResourcesIdentifier int               `json:"resources_identifier"`
+	Nodes               map[int]*NodeJSON `json:"nodes"`
+	Connections         []*Connection     `json:"connections"`
+	Units               []*UnitJSON       `json:"units"`
+	UnassignedTasks     *TaskQueueJSON    `json:"unassigned_tasks"`
 }
 
-func NewBlob(bj *BlobJSON) *Blob {
+func NewBlob(bj *BlobJSON, conf *config.Config) *Blob {
 	b := &Blob{}
+
+	b.nodesIdentifier = bj.NodesIdentifier
+	b.resourcesIdentifier = bj.ResourcesIdentifier
 
 	b.Nodes = make(map[int]*Node)
 	for id, node := range bj.Nodes {
-		b.Nodes[id] = NewNode(node)
+		b.Nodes[id] = NewNode(node, b, conf)
 	}
 	// b.Nodes = bj.Nodes
-	b.NodesIdentifier = bj.NodesIdentifier
 	b.Connections = bj.Connections
-	b.Units = bj.Units
-	b.UnassignedTasks = bj.UnassignedTasks
+
+	for _, unit := range bj.Units {
+		b.Units = append(b.Units, NewUnit(unit, b))
+	}
+
+	b.unassignedTasks = NewTaskQueue(bj.UnassignedTasks)
 
 	b.connected = make(map[ConnectionIDs]bool)
 	for _, conn := range bj.Connections {
 		b.connected[conn.Nodes] = true
 	}
+
+	b.conf = conf
 
 	for _, unit := range b.Units {
 		unit.blob = b
@@ -55,7 +68,7 @@ func NewBlob(bj *BlobJSON) *Blob {
 	return b
 }
 
-func LoadBlob(filepath string) (*Blob, error) {
+func LoadBlob(filepath string, conf *config.Config) (*Blob, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -70,7 +83,7 @@ func LoadBlob(filepath string) (*Blob, error) {
 		return nil, err
 	}
 
-	return NewBlob(bj), nil
+	return NewBlob(bj, conf), nil
 }
 
 func (b *Blob) Save(filepath string) error {
@@ -81,21 +94,32 @@ func (b *Blob) Save(filepath string) error {
 
 	defer f.Close()
 
-	return json.NewEncoder(f).Encode(b)
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "    ")
+
+	return encoder.Encode(b.ToJSON())
 }
 
 func (b *Blob) ToJSON() *BlobJSON {
 	bj := &BlobJSON{}
+
+	bj.NodesIdentifier = b.nodesIdentifier
+	bj.ResourcesIdentifier = b.resourcesIdentifier
 
 	bj.Nodes = make(map[int]*NodeJSON)
 	for id, node := range b.Nodes {
 		bj.Nodes[id] = node.ToJSON()
 	}
 
-	bj.NodesIdentifier = b.NodesIdentifier
 	bj.Connections = b.Connections
-	bj.Units = b.Units
-	bj.UnassignedTasks = b.UnassignedTasks
+
+	bj.Units = make([]*UnitJSON, len(b.Units))
+	for i, unit := range b.Units {
+		bj.Units[i] = unit.ToJSON()
+	}
+
+	// bj.Units = b.Units
+	bj.UnassignedTasks = b.unassignedTasks.ToJSON()
 
 	return bj
 }
@@ -133,29 +157,33 @@ func (b *Blob) Update() {
 }
 
 func (b *Blob) AddNode(pos pixel.Vec, nodeType NodeType) int {
-	node := &Node{
-		id:       b.NodesIdentifier,
-		pos:      pos,
-		nodeType: nodeType,
-	}
+	node := NewNode(
+		&NodeJSON{
+			ID:   b.nodesIdentifier,
+			Pos:  pos,
+			Type: nodeType,
+		},
+		b,
+		b.conf,
+	)
 
 	switch nodeType {
 	case NodeTypeMossFarm:
-		b.UnassignedTasks.Push(&Task{
-			Type:   TaskTypeGrowMoss,
-			NodeID: node.id,
+		b.unassignedTasks.Push(&Task{
+			taskType: TaskTypeGrowMoss,
+			nodeID:   node.id,
 		})
-		b.UnassignedTasks.Push(&Task{
-			Type:   TaskTypeGrowMoss,
-			NodeID: node.id,
+		b.unassignedTasks.Push(&Task{
+			taskType: TaskTypeGrowMoss,
+			nodeID:   node.id,
 		})
-		b.UnassignedTasks.Push(&Task{
-			Type:   TaskTypeGrowMoss,
-			NodeID: node.id,
+		b.unassignedTasks.Push(&Task{
+			taskType: TaskTypeGrowMoss,
+			nodeID:   node.id,
 		})
 	}
 
-	b.NodesIdentifier++
+	b.nodesIdentifier++
 	b.Nodes[node.id] = node
 
 	return node.id
@@ -163,8 +191,8 @@ func (b *Blob) AddNode(pos pixel.Vec, nodeType NodeType) int {
 
 func (b *Blob) AddUnit(nodeID int) *Unit {
 	u := &Unit{
-		State:  UnitStateStartingWondening,
-		NodeID: nodeID,
+		state:  UnitStateStartingWondening,
+		nodeID: nodeID,
 		blob:   b,
 	}
 
@@ -340,31 +368,79 @@ func (b *Blob) Dijkstra(startNodeID, targetNodeID int) ([]int, error) {
 }
 
 type TaskQueue struct {
-	Tasks           []*Task `json:"tasks"`
-	ImpossibleTasks []*Task `json:"impossible_tasks"`
+	tasks       []*Task
+	haltedTasks []*Task
+}
+
+type TaskQueueJSON struct {
+	Tasks       []*TaskJSON `json:"tasks"`
+	HaltedTasks []*TaskJSON `json:"halted_tasks"`
+}
+
+func NewTaskQueue(tqj *TaskQueueJSON) *TaskQueue {
+	tq := &TaskQueue{}
+
+	if tqj == nil {
+		return tq
+	}
+
+	for _, task := range tqj.Tasks {
+		tq.tasks = append(tq.tasks, NewTask(task))
+	}
+
+	for _, task := range tqj.HaltedTasks {
+		tq.haltedTasks = append(tq.haltedTasks, NewTask(task))
+	}
+
+	return tq
+}
+
+func (tq *TaskQueue) ToJSON() *TaskQueueJSON {
+	tqj := &TaskQueueJSON{}
+
+	for _, task := range tq.tasks {
+		tqj.Tasks = append(tqj.Tasks, task.ToJSON())
+	}
+
+	for _, task := range tq.haltedTasks {
+		tqj.HaltedTasks = append(tqj.HaltedTasks, task.ToJSON())
+	}
+
+	return tqj
 }
 
 func (tq *TaskQueue) Push(task *Task) {
-	tq.Tasks = append(tq.Tasks, task)
+	tq.tasks = append(tq.tasks, task)
 }
 
 func (tq *TaskQueue) Pop() *Task {
-	if len(tq.Tasks) == 0 {
+	if len(tq.tasks) == 0 {
 		return nil
 	}
 
-	task := tq.Tasks[0]
-	tq.Tasks = tq.Tasks[1:]
+	task := tq.tasks[0]
+	tq.tasks = tq.tasks[1:]
 
 	return task
 }
 
 func (tq *TaskQueue) Empty() bool {
-	return len(tq.Tasks) == 0
+	return len(tq.tasks) == 0
 }
 
-func (tq *TaskQueue) Impossible(task *Task) {
-	tq.ImpossibleTasks = append(tq.ImpossibleTasks, task)
+func (tq *TaskQueue) PushHalted(task *Task) {
+	tq.haltedTasks = append(tq.haltedTasks, task)
+}
+
+func (tq *TaskQueue) PopHalted() *Task {
+	if len(tq.haltedTasks) == 0 {
+		return nil
+	}
+
+	task := tq.haltedTasks[0]
+	tq.haltedTasks = tq.haltedTasks[1:]
+
+	return task
 }
 
 func RandomSliceElement[T any](slice []T) T {

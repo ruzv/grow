@@ -1,0 +1,16 @@
+{
+  "nodes": {
+    "none": {
+      "radius": 15,
+      "resource_capacity": 0
+    },
+    "moss_farm": {
+      "radius": 25,
+      "resource_capacity": 20
+    },
+    "moss_fermentation_chamber": {
+      "radius": 20,
+      "resource_capacity": 30
+    }
+  }
+}

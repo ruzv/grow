@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"private/grow/blob"
+	"private/grow/config"
 	"private/grow/render"
 
 	"github.com/faiface/pixel"
@@ -147,11 +148,6 @@ func NewEditor(h *handler) *Editor {
 		true,
 		nil,
 	)
-	addNoneNode.onClick = func() {
-		addNoneNode.hidden = true
-		e.mode = EditorModeAddNode
-		e.nodeType = blob.NodeTypeNone
-	}
 
 	addMossFarmNode := e.NewButton(
 		pixel.V(65, 40),
@@ -165,10 +161,45 @@ func NewEditor(h *handler) *Editor {
 		true,
 		nil,
 	)
-	addMossFarmNode.onClick = func() {
+
+	addMossFerChamb := e.NewButton(
+		pixel.V(150, 40),
+		120,
+		26,
+		color.RGBA{50, 50, 50, 255},
+		color.RGBA{40, 40, 40, 255},
+		"moss fern chamb",
+		color.RGBA{255, 255, 255, 255},
+		pixel.V(10, 10),
+		true,
+		nil,
+	)
+
+	addNoneNode.onClick = func() {
+		addNoneNode.hidden = true
 		addMossFarmNode.hidden = true
+		addMossFerChamb.hidden = true
+
+		e.mode = EditorModeAddNode
+		e.nodeType = blob.NodeTypeNone
+	}
+
+	addMossFarmNode.onClick = func() {
+		addNoneNode.hidden = true
+		addMossFarmNode.hidden = true
+		addMossFerChamb.hidden = true
+
 		e.mode = EditorModeAddNode
 		e.nodeType = blob.NodeTypeMossFarm
+	}
+
+	addMossFerChamb.onClick = func() {
+		addNoneNode.hidden = true
+		addMossFarmNode.hidden = true
+		addMossFerChamb.hidden = true
+
+		e.mode = EditorModeAddNode
+		e.nodeType = blob.NodeTypeMossFermentationChamber
 	}
 
 	e.NewButton(
@@ -184,6 +215,7 @@ func NewEditor(h *handler) *Editor {
 		func() {
 			addNoneNode.hidden = false
 			addMossFarmNode.hidden = false
+			addMossFerChamb.hidden = false
 		},
 	)
 
@@ -309,7 +341,9 @@ func run() {
 
 	e := NewEditor(h)
 
-	b, err := blob.LoadBlob("blob.json")
+	conf, err := config.LoadConfig("config.json")
+
+	b, err := blob.LoadBlob("blob.json", conf)
 	if err != nil {
 		panic(err)
 	}
