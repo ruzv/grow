@@ -1,0 +1,20 @@
+{
+  "gopls": {
+    "gofumpt": true,
+    "analyses": {
+      "nilness": true,
+      "unusedwrite": true
+      // "fieldalignment": true
+    }
+    // "formatting.gofumpt": true,
+  },
+
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.go$",
+        "cmd": "golines ${file} -w -m 80 --shorten-comments --chain-split-dots"
+      }
+    ]
+  }
+}

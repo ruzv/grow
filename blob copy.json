@@ -1,0 +1,45 @@
+{
+  "nodes": {
+    "0": {
+      "id": 0,
+      "pos": { "X": 94.5113525390625, "Y": 265.29205322265625 },
+      "type": 0
+    },
+    "1": {
+      "id": 1,
+      "pos": { "X": 211.5853271484375, "Y": 399.39532470703125 },
+      "type": 0
+    },
+    "2": {
+      "id": 2,
+      "pos": { "X": 290.990478515625, "Y": 159.6746826171875 },
+      "type": 0
+    },
+    "3": {
+      "id": 3,
+      "pos": { "X": 470.0594482421875, "Y": 254.001220703125 },
+      "type": 0
+    },
+    "4": {
+      "id": 4,
+      "pos": { "X": 425.60736083984375, "Y": 530.1936645507812 },
+      "type": 1
+    }
+  },
+  "nodes_identifier": 5,
+  "connections": [
+    { "nodes": { "node_1": 0, "node_2": 1 }, "length": 178.01686143073238 },
+    { "nodes": { "node_1": 1, "node_2": 2 }, "length": 252.52953155544586 },
+    { "nodes": { "node_1": 2, "node_2": 3 }, "length": 202.39365530127264 },
+    { "nodes": { "node_1": 3, "node_2": 4 }, "length": 279.74676783292125 }
+  ],
+  "units": null,
+  "unassigned_tasks": {
+    "tasks": [
+      { "type": 0, "node_id": 4, "impossible": false },
+      { "type": 0, "node_id": 4, "impossible": false },
+      { "type": 0, "node_id": 4, "impossible": false }
+    ],
+    "impossible_tasks": null
+  }
+}
