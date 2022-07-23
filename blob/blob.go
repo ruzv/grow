@@ -3,72 +3,121 @@ package blob
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"image/color"
 	"math"
 	"math/rand"
 	"os"
 
-	"private/grow/config"
 	"private/grow/render"
 
 	"github.com/faiface/pixel"
 )
 
+type BlobConfig struct {
+	Nodes map[NodeType]*NodeConfig `json:"nodes"`
+	Jobs  map[JobType]*JobConfig   `json:"jobs"`
+}
+
 type Blob struct {
 	nodesIdentifier     int
 	resourcesIdentifier int
+	jobsIdentifier      int
 	Nodes               map[int]*Node
-	Connections         []*Connection
+	Connections         []*Connection // TODO: make this a map[ConnectionIDs]*connection
 	Units               []*Unit
-	unassignedTasks     *TaskQueue
+	jobs                *JobQueue
+	consumers           map[ResourceType][]int // mapping from resource type to node IDs
+	producers           map[ResourceType][]int // mapping from resource type to node IDs
+	pathCache           map[string][]int       // TODO: make this a map[ConnectionIDs][]int
 	connected           map[ConnectionIDs]bool
 
-	conf *config.Config
+	conf *BlobConfig
 }
 
 type BlobJSON struct {
-	NodesIdentifier     int               `json:"nodes_identifier"`
-	ResourcesIdentifier int               `json:"resources_identifier"`
-	Nodes               map[int]*NodeJSON `json:"nodes"`
-	Connections         []*Connection     `json:"connections"`
-	Units               []*UnitJSON       `json:"units"`
-	UnassignedTasks     *TaskQueueJSON    `json:"unassigned_tasks"`
+	NodesIdentifier     int                    `json:"nodes_identifier"`
+	ResourcesIdentifier int                    `json:"resources_identifier"`
+	JobsIdentifier      int                    `json:"jobs_identifier"`
+	Nodes               map[int]*NodeJSON      `json:"nodes"`
+	Connections         []*Connection          `json:"connections"`
+	Units               []*UnitJSON            `json:"units"`
+	Jobs                *JobQueueJSON          `json:"jobs"`
+	Consumers           map[ResourceType][]int `json:"consumers"`
+	Producers           map[ResourceType][]int `json:"producers"`
+
+	// TODO: SAVE PATH CACHE
+	// PathCache           map[ConnectionIDs][]int `json:"path_cache"`
 }
 
-func NewBlob(bj *BlobJSON, conf *config.Config) *Blob {
-	b := &Blob{}
+func NewBlob(bj *BlobJSON, conf *BlobConfig) *Blob {
+	b := &Blob{
+		nodesIdentifier:     bj.NodesIdentifier,
+		resourcesIdentifier: bj.ResourcesIdentifier,
+		jobsIdentifier:      bj.JobsIdentifier,
+		Nodes:               make(map[int]*Node),
+		Connections:         bj.Connections,
+		Units:               make([]*Unit, 0, len(bj.Units)),
+		pathCache:           make(map[string][]int),
+		connected:           make(map[ConnectionIDs]bool),
+		conf:                conf,
+	}
 
-	b.nodesIdentifier = bj.NodesIdentifier
-	b.resourcesIdentifier = bj.ResourcesIdentifier
-
-	b.Nodes = make(map[int]*Node)
 	for id, node := range bj.Nodes {
 		b.Nodes[id] = NewNode(node, b, conf)
 	}
-	// b.Nodes = bj.Nodes
-	b.Connections = bj.Connections
 
 	for _, unit := range bj.Units {
 		b.Units = append(b.Units, NewUnit(unit, b))
 	}
 
-	b.unassignedTasks = NewTaskQueue(bj.UnassignedTasks)
-
-	b.connected = make(map[ConnectionIDs]bool)
 	for _, conn := range bj.Connections {
 		b.connected[conn.Nodes] = true
 	}
 
-	b.conf = conf
-
-	for _, unit := range b.Units {
-		unit.blob = b
+	b.consumers = bj.Consumers
+	if b.consumers == nil {
+		b.consumers = make(map[ResourceType][]int)
 	}
+
+	b.producers = bj.Producers
+	if b.producers == nil {
+		b.producers = make(map[ResourceType][]int)
+	}
+
+	b.jobs = NewJobQueue(bj.Jobs, conf, b)
 
 	return b
 }
 
-func LoadBlob(filepath string, conf *config.Config) (*Blob, error) {
+func (b *Blob) ToJSON() *BlobJSON {
+	bj := &BlobJSON{}
+
+	bj.NodesIdentifier = b.nodesIdentifier
+	bj.ResourcesIdentifier = b.resourcesIdentifier
+	bj.JobsIdentifier = b.jobsIdentifier
+
+	bj.Nodes = make(map[int]*NodeJSON)
+	for id, node := range b.Nodes {
+		bj.Nodes[id] = node.ToJSON()
+	}
+
+	bj.Connections = b.Connections
+
+	bj.Units = make([]*UnitJSON, len(b.Units))
+	for i, unit := range b.Units {
+		bj.Units[i] = unit.ToJSON()
+	}
+
+	bj.Jobs = b.jobs.ToJSON()
+
+	bj.Consumers = b.consumers
+	bj.Producers = b.producers
+
+	return bj
+}
+
+func LoadBlob(filepath string, conf *BlobConfig) (*Blob, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -100,39 +149,6 @@ func (b *Blob) Save(filepath string) error {
 	return encoder.Encode(b.ToJSON())
 }
 
-func (b *Blob) ToJSON() *BlobJSON {
-	bj := &BlobJSON{}
-
-	bj.NodesIdentifier = b.nodesIdentifier
-	bj.ResourcesIdentifier = b.resourcesIdentifier
-
-	bj.Nodes = make(map[int]*NodeJSON)
-	for id, node := range b.Nodes {
-		bj.Nodes[id] = node.ToJSON()
-	}
-
-	bj.Connections = b.Connections
-
-	bj.Units = make([]*UnitJSON, len(b.Units))
-	for i, unit := range b.Units {
-		bj.Units[i] = unit.ToJSON()
-	}
-
-	// bj.Units = b.Units
-	bj.UnassignedTasks = b.unassignedTasks.ToJSON()
-
-	return bj
-}
-
-func (b *Blob) String() string {
-	s, err := json.MarshalIndent(b, "", "    ")
-	if err != nil {
-		return err.Error()
-	}
-
-	return string(s)
-}
-
 func (b *Blob) Render(rend *render.Renderer) {
 	for _, conn := range b.Connections {
 		n1 := b.Nodes[conn.Nodes.Node1]
@@ -146,7 +162,7 @@ func (b *Blob) Render(rend *render.Renderer) {
 	}
 
 	for _, unit := range b.Units {
-		rend.Circle(unit.Pos(), color.RGBA{50, 50, 50, 255}, 6, 0)
+		unit.Render(rend)
 	}
 }
 
@@ -154,34 +170,32 @@ func (b *Blob) Update() {
 	for _, unit := range b.Units {
 		unit.Update()
 	}
+
+	for _, node := range b.Nodes {
+		node.Update()
+	}
 }
 
 func (b *Blob) AddNode(pos pixel.Vec, nodeType NodeType) int {
 	node := NewNode(
 		&NodeJSON{
-			ID:   b.nodesIdentifier,
-			Pos:  pos,
-			Type: nodeType,
+			ID:       b.nodesIdentifier,
+			Pos:      pos,
+			NodeType: nodeType,
 		},
 		b,
 		b.conf,
 	)
 
-	switch nodeType {
-	case NodeTypeMossFarm:
-		b.unassignedTasks.Push(&Task{
-			taskType: TaskTypeGrowMoss,
-			nodeID:   node.id,
-		})
-		b.unassignedTasks.Push(&Task{
-			taskType: TaskTypeGrowMoss,
-			nodeID:   node.id,
-		})
-		b.unassignedTasks.Push(&Task{
-			taskType: TaskTypeGrowMoss,
-			nodeID:   node.id,
-		})
+	for _, res := range node.conf.Consumes {
+		b.consumers[res] = append(b.consumers[res], node.id)
 	}
+
+	for _, res := range node.conf.Produces {
+		b.producers[res] = append(b.producers[res], node.id)
+	}
+
+	b.jobs.Add(node.Jobs()...)
 
 	b.nodesIdentifier++
 	b.Nodes[node.id] = node
@@ -191,9 +205,10 @@ func (b *Blob) AddNode(pos pixel.Vec, nodeType NodeType) int {
 
 func (b *Blob) AddUnit(nodeID int) *Unit {
 	u := &Unit{
-		state:  UnitStateStartingWondening,
-		nodeID: nodeID,
-		blob:   b,
+		// TODO: change to pretty method call when it is implemented
+		procedure: []*ProcedureStep{{stepType: StartWondening}},
+		nodeID:    nodeID,
+		blob:      b,
 	}
 
 	b.Units = append(b.Units, u)
@@ -287,6 +302,13 @@ func (b *Blob) Dijkstra(startNodeID, targetNodeID int) ([]int, error) {
 		return nil, nil
 	}
 
+	pathID := fmt.Sprintf("%d-%d", startNodeID, targetNodeID)
+
+	path, ok := b.pathCache[pathID]
+	if ok {
+		return path, nil
+	}
+
 	dist := make(map[int]float64)
 	prev := make(map[int]int)
 
@@ -333,9 +355,9 @@ func (b *Blob) Dijkstra(startNodeID, targetNodeID int) ([]int, error) {
 		delete(dist, nodeID)
 	}
 
-	path := []int{}
+	path = []int{}
+	ok = false
 
-	var ok bool
 	node := targetNodeID
 
 	for {
@@ -351,96 +373,203 @@ func (b *Blob) Dijkstra(startNodeID, targetNodeID int) ([]int, error) {
 		}
 	}
 
-	path = ReverseSlice(path)
+	path = ReverseSlice(path)[1:]
 
-	// delete(dist, startNodeID)
+	b.pathCache[pathID] = path
 
-	// dist[startNodeID] = 0
-
-	// nodeID := startNodeID
-
-	// conns := b.GetNodeConnections(nodeID)
-	// for _, conn := range conns {
-	// 	dist[conn.Nodes.Opposite(nodeID)] = conn.Length
-	// }
-
-	return path[1:], nil
+	return path, nil
 }
 
-type TaskQueue struct {
-	tasks       []*Task
-	haltedTasks []*Task
-}
-
-type TaskQueueJSON struct {
-	Tasks       []*TaskJSON `json:"tasks"`
-	HaltedTasks []*TaskJSON `json:"halted_tasks"`
-}
-
-func NewTaskQueue(tqj *TaskQueueJSON) *TaskQueue {
-	tq := &TaskQueue{}
-
-	if tqj == nil {
-		return tq
+func (b *Blob) FindConsumerNodeID(resourceType ResourceType) (int, error) {
+	ids, ok := b.consumers[resourceType]
+	if !ok {
+		return 0, errors.New("no consumer found")
 	}
 
-	for _, task := range tqj.Tasks {
-		tq.tasks = append(tq.tasks, NewTask(task))
+	if len(ids) == 0 {
+		return 0, errors.New("no consumer found")
 	}
 
-	for _, task := range tqj.HaltedTasks {
-		tq.haltedTasks = append(tq.haltedTasks, NewTask(task))
+	var (
+		max   int
+		minID int
+		found bool
+	)
+
+	for _, id := range ids {
+		c := b.Nodes[id].AvailableCapacity(resourceType)
+		if c > max {
+			max = c
+			minID = id
+			found = true
+		}
 	}
 
-	return tq
-}
-
-func (tq *TaskQueue) ToJSON() *TaskQueueJSON {
-	tqj := &TaskQueueJSON{}
-
-	for _, task := range tq.tasks {
-		tqj.Tasks = append(tqj.Tasks, task.ToJSON())
+	if !found {
+		return 0, errors.New("no consumer found")
 	}
 
-	for _, task := range tq.haltedTasks {
-		tqj.HaltedTasks = append(tqj.HaltedTasks, task.ToJSON())
+	return minID, nil
+}
+
+func (b *Blob) FindProducerNodeID() (int, ResourceType, error) {
+	for resourceType, ids := range b.producers {
+		for _, id := range ids {
+			if b.Nodes[id].Resources(resourceType) > 0 {
+				return id, resourceType, nil
+			}
+		}
 	}
 
-	return tqj
+	return 0, "", errors.New("no producer found")
 }
 
-func (tq *TaskQueue) Push(task *Task) {
-	tq.tasks = append(tq.tasks, task)
+type JobQueue struct {
+	occupied  map[int]*Job
+	available map[int]*Job
+	halted    map[int]*Job
 }
 
-func (tq *TaskQueue) Pop() *Task {
-	if len(tq.tasks) == 0 {
-		return nil
+type JobQueueJSON struct {
+	Occupied  map[int]*JobJSON `json:"occupied"`
+	Available map[int]*JobJSON `json:"available"`
+	Halted    map[int]*JobJSON `json:"halted"`
+}
+
+func NewJobQueue(jqj *JobQueueJSON, conf *BlobConfig, blob *Blob) *JobQueue {
+	jq := &JobQueue{
+		occupied:  make(map[int]*Job),
+		available: make(map[int]*Job),
+		halted:    make(map[int]*Job),
 	}
 
-	task := tq.tasks[0]
-	tq.tasks = tq.tasks[1:]
-
-	return task
-}
-
-func (tq *TaskQueue) Empty() bool {
-	return len(tq.tasks) == 0
-}
-
-func (tq *TaskQueue) PushHalted(task *Task) {
-	tq.haltedTasks = append(tq.haltedTasks, task)
-}
-
-func (tq *TaskQueue) PopHalted() *Task {
-	if len(tq.haltedTasks) == 0 {
-		return nil
+	if jqj == nil {
+		return jq
 	}
 
-	task := tq.haltedTasks[0]
-	tq.haltedTasks = tq.haltedTasks[1:]
+	for id, job := range jqj.Occupied {
+		jq.occupied[id] = NewJob(job, conf, blob)
+	}
 
-	return task
+	for id, job := range jqj.Available {
+		jq.available[id] = NewJob(job, conf, blob)
+	}
+
+	for id, job := range jqj.Halted {
+		jq.halted[id] = NewJob(job, conf, blob)
+	}
+
+	return jq
+}
+
+func (jq *JobQueue) ToJSON() *JobQueueJSON {
+	jqj := &JobQueueJSON{
+		Occupied:  make(map[int]*JobJSON),
+		Available: make(map[int]*JobJSON),
+		Halted:    make(map[int]*JobJSON),
+	}
+
+	for id, job := range jq.occupied {
+		jqj.Occupied[id] = job.ToJSON()
+	}
+
+	for id, job := range jq.available {
+		jqj.Available[id] = job.ToJSON()
+	}
+
+	for id, job := range jq.halted {
+		jqj.Halted[id] = job.ToJSON()
+	}
+
+	return jqj
+}
+
+func (jq *JobQueue) GetJob() (*Job, error) {
+	job, err := jq.getAvailable()
+	if err != nil {
+		job, err = jq.getHalted()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	jq.occupied[job.id] = job
+
+	return job, nil
+}
+
+func (jq *JobQueue) getAvailable() (*Job, error) {
+	if len(jq.available) == 0 {
+		return nil, errors.New("no available job")
+	}
+
+	var job *Job
+
+	for _, j := range jq.available {
+		job = j
+		break
+	}
+
+	delete(jq.available, job.id)
+
+	return job, nil
+}
+
+func (jq *JobQueue) getHalted() (*Job, error) {
+	if len(jq.halted) == 0 {
+		return nil, errors.New("no halted job")
+	}
+
+	var job *Job
+
+	for _, j := range jq.halted {
+		job = j
+		break
+	}
+
+	delete(jq.halted, job.id)
+
+	return job, nil
+}
+
+func (jq *JobQueue) Complete(job *Job) {
+	if job == nil {
+		fmt.Println("attempt to complete nil job")
+		return
+	}
+
+	defer func() { delete(jq.occupied, job.id) }()
+
+	err := job.Complete()
+	if err != nil {
+		jq.halted[job.id] = job
+		return
+	}
+
+	jq.available[job.id] = job
+}
+
+func (jq *JobQueue) Add(jobs ...*Job) {
+	for _, job := range jobs {
+		jq.available[job.id] = job
+	}
+}
+
+func (jq *JobQueue) Halt(job *Job) {
+	if job == nil {
+		fmt.Println("attempt to halt nil job")
+		return
+	}
+
+	_, ok := jq.occupied[job.id]
+	if !ok {
+		fmt.Println("attempt to halt job not in queue")
+		return
+	}
+
+	delete(jq.occupied, job.id)
+
+	jq.halted[job.id] = job
 }
 
 func RandomSliceElement[T any](slice []T) T {

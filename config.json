@@ -1,16 +1,35 @@
 {
-  "nodes": {
-    "none": {
-      "radius": 15,
-      "resource_capacity": 0
-    },
-    "moss_farm": {
-      "radius": 25,
-      "resource_capacity": 20
-    },
-    "moss_fermentation_chamber": {
-      "radius": 20,
-      "resource_capacity": 30
+    "blob": {
+        "nodes": {
+            "none": {
+                "radius": 15,
+                "resource_capacity": {
+                    "moss": 0
+                },
+                "jobs": []
+            },
+            "moss_farm": {
+                "radius": 25,
+                "resource_capacity": {
+                    "moss": 10
+                },
+                "jobs": ["grow_moss", "grow_moss", "grow_moss"],
+                "produces": ["moss"]
+            },
+            "moss_fermentation_chamber": {
+                "radius": 20,
+                "resource_capacity": {
+                    "moss": 30
+                },
+                "consumes": ["moss"],
+                "jobs": []
+            }
+        },
+        "jobs": {
+            "grow_moss": {
+                "produced_resource": "moss",
+                "production_speed": 0.1
+            }
+        }
     }
-  }
 }

@@ -2,202 +2,178 @@ package blob
 
 import (
 	"fmt"
+	"image/color"
+
+	"private/grow/render"
 
 	"github.com/faiface/pixel"
 )
 
-type TaskType string
+// action - single step in units procedure
+// procedure - sequence of procedureSteps that the unit tries to do
+// procedureStep - groups together the action and the reqired meta-data for that
+// action
+
+type ProcedureStepType string // ProcedureStepType
 
 const (
-	TaskTypeGrowMoss TaskType = "grow_moss"
-	TaskTypeCarry    TaskType = "carry"
+	DoNothing         ProcedureStepType = "do_nothing"
+	StartWondening    ProcedureStepType = "start_wondening"
+	FindTraversalPath ProcedureStepType = "find_traversal_path" // rename TraverseTo
+	Traverse          ProcedureStepType = "traverse"
+	FinishTraversing  ProcedureStepType = "finish_traversing"
+	FindTask          ProcedureStepType = "find_task"
+	StartLerp         ProcedureStepType = "start_lerp"
+	PickUpResource    ProcedureStepType = "pick_up_resource"
+	DropResource      ProcedureStepType = "drop_resource"
+	FindConsumer      ProcedureStepType = "find_consumer"
+	FindJob           ProcedureStepType = "find_job"
+	DoJob             ProcedureStepType = "do_job"
 )
 
-type Task struct {
-	taskType TaskType
-	nodeID   int
+type ProcedureStep struct {
+	stepType     ProcedureStepType
+	nodeID       int
+	resourceType ResourceType
 }
 
-type TaskJSON struct {
-	Type   TaskType `json:"type"`
-	NodeID int      `json:"node_id"`
+type ProcedureStepJSON struct {
+	StepType     ProcedureStepType `json:"step_type"`
+	NodeID       int               `json:"node_id"`
+	ResourceType ResourceType      `json:"resource_type"`
 }
 
-func NewTask(tj *TaskJSON) *Task {
-	if tj == nil {
-		return nil
-	}
-
-	return &Task{
-		taskType: tj.Type,
-		nodeID:   tj.NodeID,
-	}
-}
-
-func (t *Task) ToJSON() *TaskJSON {
-	if t == nil {
-		return nil
-	}
-
-	return &TaskJSON{
-		Type:   t.taskType,
-		NodeID: t.nodeID,
+func NewProcedureStep(psj *ProcedureStepJSON) *ProcedureStep {
+	return &ProcedureStep{
+		stepType:     psj.StepType,
+		nodeID:       psj.NodeID,
+		resourceType: psj.ResourceType,
 	}
 }
 
-func (t *Task) Steps() []TaskStep {
-	var steps []TaskStep
-
-	switch t.taskType {
-	case TaskTypeGrowMoss:
-		steps = []TaskStep{
-			{
-				Type:   TaskStepTypeTraverseTo,
-				NodeID: t.nodeID,
-			},
-			{
-				Type:   TaskStepStartLerp,
-				NodeID: t.nodeID,
-			},
-			{
-				Type:   TaskStepTypeGrowMoss,
-				NodeID: t.nodeID,
-			},
-		}
+func (ps *ProcedureStep) ToJSON() *ProcedureStepJSON {
+	return &ProcedureStepJSON{
+		StepType:     ps.stepType,
+		NodeID:       ps.nodeID,
+		ResourceType: ps.resourceType,
 	}
-
-	return steps
 }
 
-type TaskStepType string
-
-const (
-	TaskStepTypeTraverseTo TaskStepType = "traverse_to"
-	TaskStepTypeGrowMoss   TaskStepType = "grow_moss"
-	TaskStepStartLerp      TaskStepType = "start_lerp"
-)
-
-type TaskStep struct {
-	Type   TaskStepType `json:"type"`
-	NodeID int          `json:"node_id"`
-}
-
-type UnitState string
-
-const (
-	UnitStateIdle               UnitState = "idle"
-	UnitStateStartingWondening  UnitState = "starting_wondening"
-	UnitStateTraverseing        UnitState = "traverseing"
-	UnitStateFinishedTraversing UnitState = "finished_traversing"
-	UnitStateGrowingMoss        UnitState = "growing_moss"
-	UnitStateStartingTask       UnitState = "starting_task"
-	UnitStateSartingLerp        UnitState = "starting_lerp"
-)
+// units should try to satisfy the needs of consummers
 
 type Unit struct {
-	state  UnitState
-	nodeID int
+	procedure []*ProcedureStep
+	nodeID    int
 
 	TraversingPath       []int
 	TraversingConnection *Connection
 	TraversingStep       int
 	TraversingProgress   float64
 
-	Task            *Task
-	TaskSteps       []TaskStep
-	CurrentTaskStep int
-
 	stationaryPos          pixel.Vec
 	stationaryTarget       pixel.Vec
 	stationaryLerpProgress float64
 
-	productionProgress float64
+	resource ResourceType
+
+	job         *Job
+	jobProgress float64
 
 	blob *Blob
 }
 
 type UnitJSON struct {
-	State  UnitState `json:"state"`
-	NodeID int       `json:"node"`
+	Procedure []*ProcedureStepJSON `json:"procedure"`
+	NodeID    int                  `json:"node"`
 
 	TraversingPath       []int       `json:"traversing_path"`
 	TraversingConnection *Connection `json:"traversing_connection"`
 	TraversingStep       int         `json:"traversing_step"`
 	TraversingProgress   float64     `json:"traversing_progress"`
 
-	Task            *TaskJSON  `json:"task"`
-	TaskSteps       []TaskStep `json:"task_steps"`
-	CurrentTaskStep int        `json:"current_task_step"`
-
 	StationaryPos          pixel.Vec `json:"stationary_pos"`
 	StationaryTarget       pixel.Vec `json:"stationary_target"`
 	StationaryLerpProgress float64   `json:"stationary_lerp_progress"`
 
-	ProductionProgress float64 `json:"production_progress"`
+	Resource ResourceType `json:"resource"`
+
+	Job         *JobJSON `json:"job"`
+	JobProgress float64  `json:"job_progress"`
 }
 
-func NewUnit(uj *UnitJSON, b *Blob) *Unit {
+func NewUnit(uj *UnitJSON, blob *Blob) *Unit {
 	u := &Unit{
-		state:  uj.State,
-		nodeID: uj.NodeID,
+		procedure: make([]*ProcedureStep, 0, len(uj.Procedure)),
+		nodeID:    uj.NodeID,
 
 		TraversingPath:       uj.TraversingPath,
 		TraversingConnection: uj.TraversingConnection,
 		TraversingStep:       uj.TraversingStep,
 		TraversingProgress:   uj.TraversingProgress,
 
-		Task:            NewTask(uj.Task),
-		TaskSteps:       uj.TaskSteps,
-		CurrentTaskStep: uj.CurrentTaskStep,
-
 		stationaryPos:          uj.StationaryPos,
 		stationaryTarget:       uj.StationaryTarget,
 		stationaryLerpProgress: uj.StationaryLerpProgress,
 
-		productionProgress: uj.ProductionProgress,
+		resource: uj.Resource,
 
-		blob: b,
+		job:         NewJob(uj.Job, blob.conf, blob),
+		jobProgress: uj.JobProgress,
+
+		blob: blob,
+	}
+
+	for _, p := range uj.Procedure {
+		u.procedure = append(u.procedure, NewProcedureStep(p))
 	}
 
 	return u
 }
 
 func (u *Unit) ToJSON() *UnitJSON {
-	return &UnitJSON{
-		State:  u.state,
-		NodeID: u.nodeID,
+	uj := &UnitJSON{
+		Procedure: make([]*ProcedureStepJSON, 0, len(u.procedure)),
+		NodeID:    u.nodeID,
 
 		TraversingPath:       u.TraversingPath,
 		TraversingConnection: u.TraversingConnection,
 		TraversingStep:       u.TraversingStep,
 		TraversingProgress:   u.TraversingProgress,
 
-		Task:            u.Task.ToJSON(),
-		TaskSteps:       u.TaskSteps,
-		CurrentTaskStep: u.CurrentTaskStep,
-
 		StationaryPos:          u.stationaryPos,
 		StationaryTarget:       u.stationaryTarget,
 		StationaryLerpProgress: u.stationaryLerpProgress,
 
-		ProductionProgress: u.productionProgress,
+		Resource: u.resource,
+
+		Job:         u.job.ToJSON(),
+		JobProgress: u.jobProgress,
+	}
+
+	for _, p := range u.procedure {
+		uj.Procedure = append(uj.Procedure, p.ToJSON())
+	}
+
+	return uj
+}
+
+func (u *Unit) Render(rend *render.Renderer) {
+	pos := u.Pos()
+
+	rend.Circle(pos, color.RGBA{50, 50, 50, 255}, 6, 0)
+
+	if u.resource != ResourceTypeNone {
+		u.resource.Render(rend, pos)
 	}
 }
 
 func (u *Unit) Pos() pixel.Vec {
-	switch u.state {
-	case UnitStateIdle,
-		UnitStateStartingWondening,
-		UnitStateFinishedTraversing,
-		UnitStateSartingLerp,
-		UnitStateStartingTask:
+	switch u.CurrentProcedureStep().stepType {
 
-		return u.blob.Nodes[u.nodeID].pos
-
-	case UnitStateGrowingMoss:
+	case DoJob:
 		return u.stationaryPos
 
-	case UnitStateTraverseing:
+	case Traverse:
 		start := u.blob.Nodes[u.nodeID].pos
 		target := u.blob.Nodes[u.TraversingConnection.Nodes.Opposite(u.nodeID)].pos
 
@@ -206,15 +182,14 @@ func (u *Unit) Pos() pixel.Vec {
 		))
 	}
 
-	fmt.Println("missing position for ", u.state)
-	return pixel.V(0, 0)
+	return u.blob.Nodes[u.nodeID].pos
 }
 
 func (u *Unit) Update() {
-	switch u.state {
-	case UnitStateIdle:
+	switch u.CurrentProcedureStep().stepType {
+	case DoNothing:
 		// do nothing
-	case UnitStateStartingWondening:
+	case StartWondening:
 		var nodes []*Node
 		for _, node := range u.blob.Nodes {
 			if node.id == u.nodeID {
@@ -224,26 +199,46 @@ func (u *Unit) Update() {
 		}
 
 		if len(nodes) == 0 {
-			u.state = UnitStateFinishedTraversing
+			u.SetCurrentProcedureStep(FinishTraversing)
 			return
 		}
 
 		path, err := u.blob.Dijkstra(u.nodeID, RandomSliceElement(nodes).id)
 		if err != nil {
-			u.state = UnitStateStartingWondening
+			u.SetCurrentProcedureStep(StartWondening)
 			return
 		}
 
 		if len(path) == 0 {
-			u.state = UnitStateFinishedTraversing
+			u.SetCurrentProcedureStep(FinishTraversing)
 			return
 		}
 
 		u.SetTraversalPath(path)
 
-		u.state = UnitStateTraverseing
+		u.SetCurrentProcedureStep(Traverse)
 
-	case UnitStateTraverseing:
+	case FindTraversalPath:
+		path, err := u.blob.Dijkstra(u.nodeID, u.CurrentProcedureStep().nodeID)
+		if err != nil {
+			if u.job != nil {
+				u.blob.jobs.Halt(u.job)
+			}
+
+			u.ClearProcedure()
+			u.SetCurrentProcedureStep(StartWondening)
+			return
+		}
+
+		if len(path) == 0 {
+			u.SetCurrentProcedureStep(FinishTraversing)
+			return
+		}
+
+		u.SetTraversalPath(path)
+		u.SetCurrentProcedureStep(Traverse)
+
+	case Traverse:
 		u.TraversingProgress += 2
 
 		if u.TraversingProgress >= u.TraversingConnection.Length {
@@ -257,7 +252,7 @@ func (u *Unit) Update() {
 				u.TraversingConnection = nil
 				u.TraversingStep = 0
 
-				u.state = UnitStateFinishedTraversing
+				u.SetCurrentProcedureStep(FinishTraversing)
 
 				return
 			}
@@ -266,60 +261,158 @@ func (u *Unit) Update() {
 				NewConnectionIDs(u.nodeID, u.TraversingPath[u.TraversingStep]),
 			)
 		}
-	case UnitStateFinishedTraversing:
-		u.NextTaskStep()
-
-	case UnitStateStartingTask:
-
-		// var task *Task
-
-		// if u.blob.unassignedTasks.Empty() {
-		// 	task
-
-		// 	u.state = UnitStateStartingWondening
-		// 	return
-		// }
-
-		task := u.blob.unassignedTasks.Pop()
-		if task == nil {
-			task = u.blob.unassignedTasks.PopHalted()
-			if task == nil {
-				u.state = UnitStateStartingWondening
-				return
-			}
+	case FinishTraversing:
+		u.NextProcedureStep()
+	case FindTask:
+		id, resourceType, err := u.blob.FindProducerNodeID()
+		if err != nil {
+			fmt.Println(err)
+			u.ClearProcedure()
+			u.SetCurrentProcedureStep(StartWondening)
+			return
 		}
 
-		u.Task = task
-		u.TaskSteps = task.Steps()
-		u.CurrentTaskStep = 0
+		u.procedure = []*ProcedureStep{
+			{
+				stepType: FindTraversalPath,
+				nodeID:   id,
+			},
+			{
+				stepType:     PickUpResource,
+				resourceType: resourceType,
+			},
+			{
+				stepType: FindConsumer,
+			},
+			{
+				stepType: DropResource,
+			},
+		}
 
-		u.NextTaskStep()
-
-	case UnitStateSartingLerp:
+	case StartLerp:
 		u.stationaryPos = u.blob.Nodes[u.nodeID].pos
 		u.stationaryTarget = u.blob.Nodes[u.nodeID].RandPosInNode()
-		u.NextTaskStep()
+		u.NextProcedureStep()
+	case DoJob:
+		// TODO: implement job.CanDo() method that would check if all the
+		// required resources on node. This propably has to be done in procedure
+		// step StartDoingJob
 
-	case UnitStateGrowingMoss:
 		u.StationaryLerp()
 
-		u.productionProgress += 0.1
+		u.jobProgress += u.job.conf.ProductionSpeed
 
-		if u.productionProgress >= 20 {
-			u.productionProgress = 0
-			_, err := u.blob.Nodes[u.nodeID].AddResource(ResourceTypeMoss)
-			if err != nil { // node full
-				u.blob.unassignedTasks.PushHalted(u.Task)
-				u.ClearTask()
-				u.state = UnitStateStartingWondening
+		if u.jobProgress >= 100 {
+			u.jobProgress = 0
+			u.blob.jobs.Complete(u.job)
 
-				return
-			}
-
+			// find next task or wander
+			u.ClearProcedure()
+			u.SetCurrentProcedureStep(StartWondening)
+		}
+	case PickUpResource:
+		err := u.blob.Nodes[u.nodeID].TakeResource(
+			u.CurrentProcedureStep().resourceType,
+		)
+		if err != nil {
+			u.ClearProcedure()
+			u.SetCurrentProcedureStep(StartWondening)
+			return
 		}
 
-		// do nothing for now
+		u.resource = u.CurrentProcedureStep().resourceType
+
+		u.NextProcedureStep()
+
+	case FindConsumer:
+		consumerNodeID, err := u.blob.FindConsumerNodeID(u.resource)
+		fmt.Println(consumerNodeID, err)
+		if err != nil {
+			// TODO: figure out what to do here. carried resource gets lost.
+
+			u.ClearProcedure()
+			u.SetCurrentProcedureStep(StartWondening)
+			return
+		}
+
+		path, err := u.blob.Dijkstra(u.nodeID, consumerNodeID)
+		if err != nil {
+			u.ClearProcedure()
+			u.SetCurrentProcedureStep(StartWondening)
+			return
+		}
+
+		if len(path) == 0 {
+			u.SetCurrentProcedureStep(FinishTraversing)
+			return
+		}
+
+		u.SetTraversalPath(path)
+
+		u.SetCurrentProcedureStep(Traverse)
+	case DropResource:
+		err := u.blob.Nodes[u.nodeID].AddResource(u.resource)
+		if err != nil {
+			u.ClearProcedure()
+			u.SetCurrentProcedureStep(StartWondening)
+			return
+		}
+
+		u.resource = ResourceTypeNone
+
+		u.NextProcedureStep()
+
+	case FindJob:
+		job, err := u.blob.jobs.GetJob()
+		if err != nil {
+			u.SetCurrentProcedureStep(FindTask)
+			return
+		}
+
+		u.job = job
+
+		u.procedure = []*ProcedureStep{
+			{
+				stepType: FindTraversalPath,
+				nodeID:   job.nodeID,
+			},
+			{
+				stepType: StartLerp,
+			},
+			{
+				stepType: DoJob,
+			},
+		}
 	}
+}
+
+func (u *Unit) CurrentProcedureStep() *ProcedureStep {
+	return u.procedure[0]
+}
+
+func (u *Unit) SetCurrentProcedureStep(stepType ProcedureStepType) {
+	fmt.Println(stepType)
+
+	if len(u.procedure) == 0 {
+		u.procedure = make([]*ProcedureStep, 1)
+	}
+
+	u.procedure[0] = &ProcedureStep{stepType: stepType}
+}
+
+func (u *Unit) NextProcedureStep() {
+	// has no procedure or only one step (current one)
+	if len(u.procedure) <= 1 {
+		u.SetCurrentProcedureStep(FindJob)
+		return
+	}
+
+	u.procedure = u.procedure[1:]
+	fmt.Println(u.procedure[0])
+}
+
+func (u *Unit) ClearProcedure() {
+	u.procedure = nil
 }
 
 func (u *Unit) StationaryLerp() {
@@ -338,12 +431,6 @@ func (u *Unit) StationaryLerp() {
 	)
 }
 
-func (u *Unit) ClearTask() {
-	u.Task = nil
-	u.TaskSteps = nil
-	u.CurrentTaskStep = 0
-}
-
 func (u *Unit) SetTraversalPath(path []int) {
 	u.TraversingPath = path
 	u.TraversingConnection = u.blob.GetConnection(
@@ -351,40 +438,4 @@ func (u *Unit) SetTraversalPath(path []int) {
 	)
 	u.TraversingStep = 0
 	u.TraversingProgress = 0
-}
-
-func (u *Unit) NextTaskStep() {
-	defer func() { u.CurrentTaskStep++ }()
-
-	if u.CurrentTaskStep >= len(u.TaskSteps) {
-		u.state = UnitStateStartingTask
-		u.ClearTask()
-		return
-	}
-
-	currentTask := u.TaskSteps[u.CurrentTaskStep]
-
-	switch currentTask.Type {
-	case TaskStepTypeTraverseTo:
-		path, err := u.blob.Dijkstra(u.nodeID, currentTask.NodeID)
-		fmt.Println(path)
-		if err != nil { // path not found
-			u.blob.unassignedTasks.PushHalted(u.Task)
-			u.ClearTask()
-			u.state = UnitStateStartingTask
-			return
-		}
-
-		if len(path) == 0 { // unit already at node
-			u.state = UnitStateFinishedTraversing
-			return
-		}
-
-		u.SetTraversalPath(path)
-		u.state = UnitStateTraverseing
-	case TaskStepStartLerp:
-		u.state = UnitStateSartingLerp
-	case TaskStepTypeGrowMoss:
-		u.state = UnitStateGrowingMoss
-	}
 }

@@ -28,7 +28,7 @@ func NewHandler(fps int) (*handler, error) {
 		pixelgl.WindowConfig{
 			Title:  "grow",
 			Bounds: pixel.R(0, 0, 600, 600),
-			VSync:  true,
+			// VSync:  true,
 		},
 	)
 	if err != nil {
@@ -334,7 +334,7 @@ func (e *Editor) Render() {
 }
 
 func run() {
-	h, err := NewHandler(60)
+	h, err := NewHandler(30)
 	if err != nil {
 		panic(err)
 	}
@@ -343,7 +343,7 @@ func run() {
 
 	conf, err := config.LoadConfig("config.json")
 
-	b, err := blob.LoadBlob("blob.json", conf)
+	b, err := blob.LoadBlob("blob.json", &conf.Blob)
 	if err != nil {
 		panic(err)
 	}

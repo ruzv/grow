@@ -16,5 +16,13 @@
         "cmd": "golines ${file} -w -m 80 --shorten-comments --chain-split-dots"
       }
     ]
-  }
+  },
+
+  "[json]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.tabWidth": 4,
+
+  "zenMode.hideActivityBar":false
 }

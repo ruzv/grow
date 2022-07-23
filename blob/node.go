@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/rand"
 
-	"private/grow/config"
 	"private/grow/render"
 
 	"github.com/faiface/pixel"
@@ -16,43 +15,14 @@ import (
 type ResourceType string
 
 const (
+	ResourceTypeNone ResourceType = ""
 	ResourceTypeMoss ResourceType = "moss"
 )
 
-type Resource struct {
-	id           int
-	resourceType ResourceType
-	pos          pixel.Vec
-}
-
-type ResourceJSON struct {
-	ID           int          `json:"id"`
-	ResourceType ResourceType `json:"resource_type"`
-	Pos          pixel.Vec    `json:"pos"`
-}
-
-func NewResource(rj *ResourceJSON) *Resource {
-	r := &Resource{}
-
-	r.id = rj.ID
-	r.resourceType = rj.ResourceType
-	r.pos = rj.Pos
-
-	return r
-}
-
-func (r *Resource) ToJSON() *ResourceJSON {
-	return &ResourceJSON{
-		ID:           r.id,
-		ResourceType: r.resourceType,
-		Pos:          r.pos,
-	}
-}
-
-func (r *Resource) Render(rend *render.Renderer) {
-	switch r.resourceType {
+func (resourceType ResourceType) Render(rend *render.Renderer, pos pixel.Vec) {
+	switch resourceType {
 	case ResourceTypeMoss:
-		rend.Circle(r.pos, color.RGBA{153, 255, 102, 255}, 3, 0)
+		rend.Circle(pos, color.RGBA{153, 255, 102, 255}, 3, 0)
 	}
 }
 
@@ -64,49 +34,46 @@ const (
 	NodeTypeMossFermentationChamber NodeType = "moss_fermentation_chamber"
 )
 
+type NodeConfig struct {
+	Radius           float64              `json:"radius"`
+	ResourceCapacity map[ResourceType]int `json:"resource_capacity"`
+	Consumes         []ResourceType       `json:"consumes"`
+	Produces         []ResourceType       `json:"produces"`
+	Jobs             []JobType            `json:"jobs"`
+}
+
 type Node struct {
-	id        int
-	pos       pixel.Vec
-	nodeType  NodeType
-	resources map[int]*Resource
-	consumes  []ResourceType
-	conf      *config.NodeConfig
-	blob      *Blob
+	id                 int
+	pos                pixel.Vec
+	nodeType           NodeType
+	resources          map[ResourceType][]pixel.Vec
+	productionProgress float64
+	conf               *NodeConfig
+	blob               *Blob
 }
 
 type NodeJSON struct {
-	ID        int                   `json:"id"`
-	Pos       pixel.Vec             `json:"pos"`
-	Type      NodeType              `json:"type"`
-	Resources map[int]*ResourceJSON `json:"resources"`
+	ID                 int                          `json:"id"`
+	Pos                pixel.Vec                    `json:"pos"`
+	NodeType           NodeType                     `json:"node_type"`
+	Resources          map[ResourceType][]pixel.Vec `json:"resources"`
+	ProductionProgress float64                      `json:"production_progress"`
 }
 
-func GetNodeConfig(nodeType NodeType, conf *config.Config) *config.NodeConfig {
-	switch nodeType {
-	case NodeTypeNone:
-		return &conf.Nodes.None
-	case NodeTypeMossFarm:
-		return &conf.Nodes.MossFarm
-	case NodeTypeMossFermentationChamber:
-		return &conf.Nodes.MossFermentationChamber
+func NewNode(nj *NodeJSON, b *Blob, conf *BlobConfig) *Node {
+	n := &Node{
+		id:                 nj.ID,
+		pos:                nj.Pos,
+		nodeType:           nj.NodeType,
+		resources:          nj.Resources,
+		productionProgress: nj.ProductionProgress,
 	}
 
-	return nil
-}
-
-func NewNode(nj *NodeJSON, b *Blob, conf *config.Config) *Node {
-	n := &Node{}
-
-	n.id = nj.ID
-	n.pos = nj.Pos
-	n.nodeType = nj.Type
-
-	n.resources = make(map[int]*Resource)
-	for id, res := range nj.Resources {
-		n.resources[id] = NewResource(res)
+	if n.resources == nil {
+		n.resources = make(map[ResourceType][]pixel.Vec)
 	}
 
-	n.conf = GetNodeConfig(n.nodeType, conf)
+	n.conf = conf.Nodes[n.nodeType]
 	n.blob = b
 
 	return n
@@ -114,17 +81,34 @@ func NewNode(nj *NodeJSON, b *Blob, conf *config.Config) *Node {
 
 func (n *Node) ToJSON() *NodeJSON {
 	nj := &NodeJSON{
-		ID:   n.id,
-		Pos:  n.pos,
-		Type: n.nodeType,
-	}
-
-	nj.Resources = make(map[int]*ResourceJSON)
-	for id, res := range n.resources {
-		nj.Resources[id] = res.ToJSON()
+		ID:                 n.id,
+		Pos:                n.pos,
+		NodeType:           n.nodeType,
+		Resources:          n.resources,
+		ProductionProgress: n.productionProgress,
 	}
 
 	return nj
+}
+
+func (n *Node) Jobs() []*Job {
+	jobs := make([]*Job, 0, len(n.conf.Jobs))
+
+	for _, jobType := range n.conf.Jobs {
+		jobs = append(jobs, NewJob(
+			&JobJSON{
+				ID:      n.blob.jobsIdentifier,
+				NodeID:  n.id,
+				JobType: jobType,
+			},
+			n.blob.conf,
+			n.blob,
+		))
+
+		n.blob.jobsIdentifier++
+	}
+
+	return jobs
 }
 
 func (n *Node) Render(rend *render.Renderer) {
@@ -139,11 +123,24 @@ func (n *Node) Render(rend *render.Renderer) {
 		rend.Circle(n.pos, color.RGBA{0, 102, 102, 255}, n.conf.Radius, 3)
 	}
 
-	for _, r := range n.resources {
-		r.Render(rend)
+	for resourceType, positions := range n.resources {
+		for _, pos := range positions {
+			resourceType.Render(rend, pos)
+		}
 	}
 
 	rend.Text(n.pos, color.RGBA{255, 0, 0, 255}, fmt.Sprintf("%d", n.id), 1)
+}
+
+func (n *Node) Update() {
+	switch n.nodeType {
+	case NodeTypeMossFermentationChamber:
+		n.productionProgress += 0.1 // TODO: config
+		if n.productionProgress > 40 {
+			n.productionProgress = 0
+			n.TakeResource(ResourceTypeMoss)
+		}
+	}
 }
 
 func (n *Node) RandPosInNode() pixel.Vec {
@@ -154,31 +151,130 @@ func (n *Node) RandPosInNode() pixel.Vec {
 	)
 }
 
-func (n *Node) AddResource(resourceType ResourceType) (int, error) {
-	if len(n.resources) >= n.conf.ResourceCapacity {
-		return 0, errors.New("resource capacity reached")
+func (n *Node) AddResource(resourceType ResourceType) error {
+	if len(n.resources[resourceType]) >= n.conf.ResourceCapacity[resourceType] {
+		return errors.New("resource capacity reached")
 	}
 
-	id := n.blob.resourcesIdentifier
-	n.blob.resourcesIdentifier++
+	n.resources[resourceType] = append(
+		n.resources[resourceType],
+		n.RandPosInNode(),
+	)
 
-	r := &Resource{
-		id:           id,
-		resourceType: resourceType,
-		pos:          n.RandPosInNode(),
-	}
-
-	n.resources[id] = r
-
-	return id, nil
+	return nil
 }
 
-func (n *Node) CanConsume(resourceType ResourceType) bool {
-	for _, c := range n.conf.Consumes {
-		if ResourceType(c) == resourceType {
-			return true
-		}
+func (n *Node) TakeResource(resourceType ResourceType) error {
+	if len(n.resources[resourceType]) == 0 {
+		return errors.New("no resource")
 	}
 
-	return false
+	n.resources[resourceType] = n.resources[resourceType][1:]
+
+	return nil
+}
+
+func (n *Node) Consumes() []ResourceType {
+	consumes := make([]ResourceType, 0, len(n.conf.Consumes))
+
+	for _, c := range n.conf.Consumes {
+		consumes = append(consumes, ResourceType(c))
+	}
+
+	return consumes
+}
+
+func (n *Node) AvailableCapacity(resourceType ResourceType) int {
+	return n.conf.ResourceCapacity[resourceType] -
+		len(n.resources[resourceType])
+}
+
+func (n *Node) Resources(resourceType ResourceType) int {
+	return len(n.resources[resourceType])
+}
+
+// func (n *Node) CanConsume() []ResourceType {
+// 	var consumes []ResourceType
+
+// 	for resourceType, resources := range n.resources {
+// 		if len(resources) < n.conf.ResourceCapacity[resourceType] {
+// 			consumes = append(consumes, resourceType)
+// 		}
+// 	}
+
+// 	return consumes
+// }
+
+// func (n *Node) HasResources() []ResourceType {
+// 	var has []ResourceType
+
+// 	for resourceType, resources := range n.resources {
+// 		if len(resources) > 0 {
+// 			has = append(has, resourceType)
+// 		}
+// 	}
+
+// 	return has
+// }
+
+type JobType string
+
+const JobTypeGrowMoss JobType = "grow_moss"
+
+type JobConfig struct {
+	ProducedResource ResourceType `json:"produced_resource"`
+	ProductionSpeed  float64      `json:"production_speed"`
+
+	// latter this will allow to add support for multiple produced resources,
+	// required resources, ...
+}
+
+type Job struct {
+	id      int
+	nodeID  int
+	jobType JobType
+
+	conf *JobConfig
+	blob *Blob
+}
+
+type JobJSON struct {
+	ID      int     `json:"id"`
+	NodeID  int     `json:"node_id"`
+	JobType JobType `json:"job_type"`
+}
+
+func NewJob(jj *JobJSON, conf *BlobConfig, blob *Blob) *Job {
+	if jj == nil {
+		return nil
+	}
+
+	j := &Job{
+		id:      jj.ID,
+		nodeID:  jj.NodeID,
+		jobType: jj.JobType,
+		blob:    blob,
+	}
+
+	j.conf = conf.Jobs[j.jobType]
+
+	return j
+}
+
+func (j *Job) ToJSON() *JobJSON {
+	if j == nil {
+		return nil
+	}
+
+	jj := &JobJSON{
+		ID:      j.id,
+		NodeID:  j.nodeID,
+		JobType: j.jobType,
+	}
+
+	return jj
+}
+
+func (j *Job) Complete() error {
+	return j.blob.Nodes[j.nodeID].AddResource(j.conf.ProducedResource)
 }

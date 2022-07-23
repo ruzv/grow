@@ -1,373 +1,1692 @@
 {
-    "nodes_identifier": 5,
-    "resources_identifier": 20,
+    "nodes_identifier": 11,
+    "resources_identifier": 0,
+    "jobs_identifier": 18,
     "nodes": {
         "0": {
             "id": 0,
             "pos": {
-                "X": 198.69393920898438,
-                "Y": 233.73272705078125
+                "X": 168.072265625,
+                "Y": 206.3585205078125
             },
-            "type": "moss_farm",
+            "node_type": "moss_farm",
             "resources": {
-                "0": {
-                    "id": 0,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 198.22002691579905,
-                        "Y": 232.48979577127307
+                "moss": [
+                    {
+                        "X": 173.3719902606143,
+                        "Y": 195.5872807959989
                     }
-                },
-                "1": {
-                    "id": 1,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 206.38281575920922,
-                        "Y": 227.9212828802663
-                    }
-                },
-                "10": {
-                    "id": 10,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 194.7460090378236,
-                        "Y": 227.38973074220874
-                    }
-                },
-                "11": {
-                    "id": 11,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 201.68362790477056,
-                        "Y": 228.67363198033362
-                    }
-                },
-                "12": {
-                    "id": 12,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 203.12039633198773,
-                        "Y": 216.9853200770533
-                    }
-                },
-                "13": {
-                    "id": 13,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 206.28737070693302,
-                        "Y": 250.29736651677842
-                    }
-                },
-                "14": {
-                    "id": 14,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 177.34599455774244,
-                        "Y": 232.40775027754808
-                    }
-                },
-                "15": {
-                    "id": 15,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 190.74277125812833,
-                        "Y": 238.38446890842908
-                    }
-                },
-                "16": {
-                    "id": 16,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 197.73295338167264,
-                        "Y": 234.3636992935115
-                    }
-                },
-                "17": {
-                    "id": 17,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 210.88427833581554,
-                        "Y": 250.4417509616106
-                    }
-                },
-                "18": {
-                    "id": 18,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 197.50965116017784,
-                        "Y": 245.19784463232088
-                    }
-                },
-                "19": {
-                    "id": 19,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 194.45551039546544,
-                        "Y": 237.38219867940282
-                    }
-                },
-                "2": {
-                    "id": 2,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 203.32066324701606,
-                        "Y": 244.85241984270357
-                    }
-                },
-                "3": {
-                    "id": 3,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 185.32169127206745,
-                        "Y": 229.37416868456893
-                    }
-                },
-                "4": {
-                    "id": 4,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 192.361253828769,
-                        "Y": 216.53791449796103
-                    }
-                },
-                "5": {
-                    "id": 5,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 204.73412069042257,
-                        "Y": 240.19847693351068
-                    }
-                },
-                "6": {
-                    "id": 6,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 208.17803644634,
-                        "Y": 240.59874432663634
-                    }
-                },
-                "7": {
-                    "id": 7,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 202.20043464922932,
-                        "Y": 227.15296774883123
-                    }
-                },
-                "8": {
-                    "id": 8,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 189.67536091302046,
-                        "Y": 253.10909245541464
-                    }
-                },
-                "9": {
-                    "id": 9,
-                    "resource_type": "moss",
-                    "pos": {
-                        "X": 200.4071842786227,
-                        "Y": 253.62666064576305
-                    }
-                }
-            }
+                ]
+            },
+            "production_progress": 0
         },
         "1": {
             "id": 1,
             "pos": {
-                "X": 341.84002685546875,
-                "Y": 329.526611328125
+                "X": 356.9501953125,
+                "Y": 181.56396484375
             },
-            "type": "none",
-            "resources": {}
+            "node_type": "moss_fermentation_chamber",
+            "resources": {
+                "moss": [
+                    {
+                        "X": 370.0329696057171,
+                        "Y": 183.66827172686322
+                    },
+                    {
+                        "X": 351.64411286878493,
+                        "Y": 183.79333193424668
+                    },
+                    {
+                        "X": 345.73461007815195,
+                        "Y": 183.46690229831836
+                    },
+                    {
+                        "X": 356.8773679284435,
+                        "Y": 181.41335837406044
+                    },
+                    {
+                        "X": 355.67503327388374,
+                        "Y": 182.28324918903914
+                    },
+                    {
+                        "X": 357.6385002601996,
+                        "Y": 180.40183526400216
+                    },
+                    {
+                        "X": 354.2463058577316,
+                        "Y": 180.38572525214772
+                    },
+                    {
+                        "X": 356.9090294924732,
+                        "Y": 191.3891383101427
+                    },
+                    {
+                        "X": 342.7696470557164,
+                        "Y": 187.21347906805042
+                    },
+                    {
+                        "X": 356.7084242311651,
+                        "Y": 193.05633985118266
+                    },
+                    {
+                        "X": 351.69836595778344,
+                        "Y": 182.34039656112841
+                    },
+                    {
+                        "X": 352.5754066284967,
+                        "Y": 178.069770579202
+                    },
+                    {
+                        "X": 355.2255017708829,
+                        "Y": 183.42929277924978
+                    },
+                    {
+                        "X": 364.0532173093181,
+                        "Y": 180.70510611548087
+                    },
+                    {
+                        "X": 351.30614179951027,
+                        "Y": 183.298609623854
+                    },
+                    {
+                        "X": 363.58484132967095,
+                        "Y": 165.22464786694792
+                    },
+                    {
+                        "X": 365.2856126231442,
+                        "Y": 179.67994580759517
+                    },
+                    {
+                        "X": 357.16299087242356,
+                        "Y": 180.7290248656117
+                    },
+                    {
+                        "X": 363.5954291869656,
+                        "Y": 167.54751718151974
+                    },
+                    {
+                        "X": 348.7359607826,
+                        "Y": 174.10833218775838
+                    },
+                    {
+                        "X": 356.1593562303725,
+                        "Y": 176.51326245858152
+                    },
+                    {
+                        "X": 356.1234582538294,
+                        "Y": 182.7567046286098
+                    },
+                    {
+                        "X": 357.70665871101914,
+                        "Y": 181.76294734820559
+                    },
+                    {
+                        "X": 356.46117974853865,
+                        "Y": 180.84782879023524
+                    },
+                    {
+                        "X": 370.4878800981708,
+                        "Y": 191.23676400730972
+                    },
+                    {
+                        "X": 352.54181989579115,
+                        "Y": 172.30152649282815
+                    },
+                    {
+                        "X": 370.8673782192785,
+                        "Y": 173.92623275700115
+                    },
+                    {
+                        "X": 356.9394636141466,
+                        "Y": 186.1936884393146
+                    },
+                    {
+                        "X": 374.0782883090032,
+                        "Y": 183.5871948016753
+                    },
+                    {
+                        "X": 364.31350973659664,
+                        "Y": 180.73305766648713
+                    }
+                ]
+            },
+            "production_progress": 16.09999999999996
+        },
+        "10": {
+            "id": 10,
+            "pos": {
+                "X": 413.16046142578125,
+                "Y": 192.05792236328125
+            },
+            "node_type": "moss_fermentation_chamber",
+            "resources": {},
+            "production_progress": 26.0000000000001
         },
         "2": {
             "id": 2,
             "pos": {
-                "X": 314.1458740234375,
-                "Y": 112.79229736328125
+                "X": 295.34552001953125,
+                "Y": 332.27496337890625
             },
-            "type": "none",
-            "resources": {}
+            "node_type": "none",
+            "resources": {},
+            "production_progress": 0
         },
         "3": {
             "id": 3,
             "pos": {
-                "X": 101.5194091796875,
-                "Y": 387.0799560546875
+                "X": 269.6202392578125,
+                "Y": 199.59979248046875
             },
-            "type": "none",
-            "resources": {}
+            "node_type": "none",
+            "resources": {},
+            "production_progress": 0
         },
         "4": {
             "id": 4,
             "pos": {
-                "X": 279.00732421875,
-                "Y": 464.475830078125
+                "X": 194.185302734375,
+                "Y": 118.35260009765625
             },
-            "type": "none",
-            "resources": {}
+            "node_type": "moss_farm",
+            "resources": {
+                "moss": [
+                    {
+                        "X": 176.31448396599842,
+                        "Y": 119.96463970643006
+                    }
+                ]
+            },
+            "production_progress": 0
+        },
+        "5": {
+            "id": 5,
+            "pos": {
+                "X": 292.1916198730469,
+                "Y": 89.64599609375
+            },
+            "node_type": "moss_farm",
+            "resources": {
+                "moss": [
+                    {
+                        "X": 291.7953922288458,
+                        "Y": 89.90812598880879
+                    }
+                ]
+            },
+            "production_progress": 0
+        },
+        "6": {
+            "id": 6,
+            "pos": {
+                "X": 373.09228515625,
+                "Y": 101.48126220703125
+            },
+            "node_type": "none",
+            "resources": {},
+            "production_progress": 0
+        },
+        "7": {
+            "id": 7,
+            "pos": {
+                "X": 350.66693115234375,
+                "Y": 40.20098876953125
+            },
+            "node_type": "moss_farm",
+            "resources": {
+                "moss": []
+            },
+            "production_progress": 0
+        },
+        "8": {
+            "id": 8,
+            "pos": {
+                "X": 448.17877197265625,
+                "Y": 46.6044921875
+            },
+            "node_type": "moss_farm",
+            "resources": {
+                "moss": [
+                    {
+                        "X": 462.8881544394275,
+                        "Y": 37.06129105675829
+                    },
+                    {
+                        "X": 449.31438471381296,
+                        "Y": 45.07653937770824
+                    },
+                    {
+                        "X": 452.12512884224924,
+                        "Y": 61.18936948796327
+                    },
+                    {
+                        "X": 438.15344151587016,
+                        "Y": 34.97169059863061
+                    },
+                    {
+                        "X": 455.26477599714235,
+                        "Y": 45.45731963460638
+                    },
+                    {
+                        "X": 444.9865256380195,
+                        "Y": 37.662954573588486
+                    },
+                    {
+                        "X": 448.37548462918147,
+                        "Y": 63.829110918237944
+                    },
+                    {
+                        "X": 429.4862946944034,
+                        "Y": 47.22949871367639
+                    },
+                    {
+                        "X": 458.0121543161386,
+                        "Y": 62.962899007694034
+                    }
+                ]
+            },
+            "production_progress": 0
+        },
+        "9": {
+            "id": 9,
+            "pos": {
+                "X": 452.98956298828125,
+                "Y": 130.5845947265625
+            },
+            "node_type": "moss_farm",
+            "resources": {
+                "moss": [
+                    {
+                        "X": 455.62647599350754,
+                        "Y": 127.28975161795228
+                    },
+                    {
+                        "X": 434.425870265919,
+                        "Y": 136.96612591188415
+                    },
+                    {
+                        "X": 451.6251327412016,
+                        "Y": 130.70904181022533
+                    },
+                    {
+                        "X": 450.0239338710551,
+                        "Y": 108.3607103419568
+                    },
+                    {
+                        "X": 443.89662966393627,
+                        "Y": 127.93910809985935
+                    },
+                    {
+                        "X": 440.6559090808688,
+                        "Y": 121.44255057152223
+                    },
+                    {
+                        "X": 440.7892696227411,
+                        "Y": 122.22854459198768
+                    },
+                    {
+                        "X": 459.8285446905242,
+                        "Y": 121.80324371240701
+                    },
+                    {
+                        "X": 440.22816878872715,
+                        "Y": 117.06544145518154
+                    },
+                    {
+                        "X": 445.0040039332809,
+                        "Y": 123.22232522852383
+                    }
+                ]
+            },
+            "production_progress": 0
         }
     },
     "connections": [
         {
             "nodes": {
                 "node_1": 0,
-                "node_2": 3
-            },
-            "length": 181.544104640143
-        },
-        {
-            "nodes": {
-                "node_1": 0,
-                "node_2": 1
-            },
-            "length": 172.24189581352184
-        },
-        {
-            "nodes": {
-                "node_1": 0,
                 "node_2": 2
             },
-            "length": 167.19969134360824
+            "length": 179.03472252466696
         },
         {
             "nodes": {
                 "node_1": 1,
                 "node_2": 2
             },
-            "length": 218.49651931070977
-        },
-        {
-            "nodes": {
-                "node_1": 1,
-                "node_2": 4
-            },
-            "length": 148.8598003554676
+            "length": 162.81566600734706
         },
         {
             "nodes": {
                 "node_1": 3,
                 "node_2": 4
             },
-            "length": 193.62872023737927
+            "length": 110.86719947028874
+        },
+        {
+            "nodes": {
+                "node_1": 2,
+                "node_2": 3
+            },
+            "length": 135.14618397571888
+        },
+        {
+            "nodes": {
+                "node_1": 3,
+                "node_2": 5
+            },
+            "length": 112.24662383666505
+        },
+        {
+            "nodes": {
+                "node_1": 3,
+                "node_2": 6
+            },
+            "length": 142.5963192562411
+        },
+        {
+            "nodes": {
+                "node_1": 6,
+                "node_2": 7
+            },
+            "length": 65.25464285991674
+        },
+        {
+            "nodes": {
+                "node_1": 6,
+                "node_2": 8
+            },
+            "length": 93.0023676591455
+        },
+        {
+            "nodes": {
+                "node_1": 6,
+                "node_2": 9
+            },
+            "length": 85.03281113024076
+        },
+        {
+            "nodes": {
+                "node_1": 6,
+                "node_2": 10
+            },
+            "length": 99.04337491537248
         }
     ],
     "units": [
         {
-            "state": "growing_moss",
-            "node": 0,
-            "traversing_path": null,
-            "traversing_connection": null,
-            "traversing_step": 0,
-            "traversing_progress": 0,
-            "task": {
-                "type": "grow_moss",
-                "node_id": 0
-            },
-            "task_steps": [
+            "procedure": [
                 {
-                    "type": "traverse_to",
-                    "node_id": 0
-                },
-                {
-                    "type": "start_lerp",
-                    "node_id": 0
-                },
-                {
-                    "type": "grow_moss",
-                    "node_id": 0
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
                 }
             ],
-            "current_task_step": 3,
+            "node": 0,
+            "traversing_path": [
+                2,
+                3,
+                6,
+                8
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 0,
+                    "node_2": 2
+                },
+                "length": 179.03472252466696
+            },
+            "traversing_step": 0,
+            "traversing_progress": 90,
             "stationary_pos": {
-                "X": 202.83879914181446,
-                "Y": 226.34246276218965
+                "X": 163.0323740052517,
+                "Y": 194.71760210024428
             },
             "stationary_target": {
-                "X": 202.83762944560144,
-                "Y": 226.3386208105406
+                "X": 161.6826910331845,
+                "Y": 191.88287637369538
             },
-            "stationary_lerp_progress": 0.7500000000000001,
-            "production_progress": 9.89999999999998
+            "stationary_lerp_progress": 0.35,
+            "resource": "moss",
+            "job": {
+                "id": 1,
+                "node_id": 0,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
         },
         {
-            "state": "growing_moss",
-            "node": 0,
-            "traversing_path": null,
-            "traversing_connection": null,
-            "traversing_step": 0,
-            "traversing_progress": 0,
-            "task": {
-                "type": "grow_moss",
-                "node_id": 0
-            },
-            "task_steps": [
+            "procedure": [
                 {
-                    "type": "traverse_to",
-                    "node_id": 0
-                },
-                {
-                    "type": "start_lerp",
-                    "node_id": 0
-                },
-                {
-                    "type": "grow_moss",
-                    "node_id": 0
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
                 }
             ],
-            "current_task_step": 3,
+            "node": 6,
+            "traversing_path": [
+                3,
+                6,
+                8
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 6,
+                    "node_2": 8
+                },
+                "length": 93.0023676591455
+            },
+            "traversing_step": 2,
+            "traversing_progress": 16,
             "stationary_pos": {
-                "X": 205.8573060048661,
-                "Y": 231.0403174733824
+                "X": 192.62274410290928,
+                "Y": 110.83768864554321
             },
             "stationary_target": {
-                "X": 219.93016702348268,
-                "Y": 230.27886156528714
+                "X": 195.30788589821364,
+                "Y": 112.97536513826745
             },
-            "stationary_lerp_progress": 0.2,
-            "production_progress": 19.300000000000004
+            "stationary_lerp_progress": 0.35,
+            "resource": "",
+            "job": {
+                "id": 5,
+                "node_id": 4,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
         },
         {
-            "state": "growing_moss",
-            "node": 0,
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "pick_up_resource",
+                    "node_id": 0,
+                    "resource_type": "moss"
+                },
+                {
+                    "step_type": "find_consumer",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "drop_resource",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 2,
+            "traversing_path": [
+                2,
+                3,
+                4
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 2,
+                    "node_2": 3
+                },
+                "length": 135.14618397571888
+            },
+            "traversing_step": 1,
+            "traversing_progress": 108,
+            "stationary_pos": {
+                "X": 300.2231640467397,
+                "Y": 84.15735113118772
+            },
+            "stationary_target": {
+                "X": 300.23613514681773,
+                "Y": 84.1623995515731
+            },
+            "stationary_lerp_progress": 0.7000000000000001,
+            "resource": "",
+            "job": {
+                "id": 8,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "start_lerp",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 6,
+            "traversing_path": [
+                6,
+                3,
+                4
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 3,
+                    "node_2": 6
+                },
+                "length": 142.5963192562411
+            },
+            "traversing_step": 1,
+            "traversing_progress": 118,
+            "stationary_pos": {
+                "X": 445.0723241456135,
+                "Y": 59.8691203425063
+            },
+            "stationary_target": {
+                "X": 441.19762750964117,
+                "Y": 67.11985495480855
+            },
+            "stationary_lerp_progress": 0.35,
+            "resource": "",
+            "job": {
+                "id": 5,
+                "node_id": 4,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 9,
             "traversing_path": null,
             "traversing_connection": null,
             "traversing_step": 0,
             "traversing_progress": 0,
-            "task": {
-                "type": "grow_moss",
-                "node_id": 0
-            },
-            "task_steps": [
-                {
-                    "type": "traverse_to",
-                    "node_id": 0
-                },
-                {
-                    "type": "start_lerp",
-                    "node_id": 0
-                },
-                {
-                    "type": "grow_moss",
-                    "node_id": 0
-                }
-            ],
-            "current_task_step": 3,
             "stationary_pos": {
-                "X": 200.69451695674172,
-                "Y": 241.18810898118915
+                "X": 449.82709896049624,
+                "Y": 132.9884184408567
             },
             "stationary_target": {
-                "X": 200.76222530899653,
-                "Y": 241.44043190465672
+                "X": 442.6918929769071,
+                "Y": 139.06529666214706
+            },
+            "stationary_lerp_progress": 0.05,
+            "resource": "moss",
+            "job": {
+                "id": 15,
+                "node_id": 9,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 50.50000000000045
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 8,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 435.1511724706454,
+                "Y": 63.175713745715115
+            },
+            "stationary_target": {
+                "X": 434.83748097140233,
+                "Y": 63.79258172156575
             },
             "stationary_lerp_progress": 0.49999999999999994,
-            "production_progress": 0.9999999999999999
+            "resource": "moss",
+            "job": {
+                "id": 12,
+                "node_id": 8,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 27.600000000000122
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "drop_resource",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 6,
+            "traversing_path": [
+                6,
+                3,
+                2,
+                1
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 3,
+                    "node_2": 6
+                },
+                "length": 142.5963192562411
+            },
+            "traversing_step": 1,
+            "traversing_progress": 90,
+            "stationary_pos": {
+                "X": 453.04833464904,
+                "Y": 123.04520053851572
+            },
+            "stationary_target": {
+                "X": 453.68271432920284,
+                "Y": 112.82948237901718
+            },
+            "stationary_lerp_progress": 0,
+            "resource": "moss",
+            "job": {
+                "id": 17,
+                "node_id": 9,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 0,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 158.76846773236332,
+                "Y": 188.9442434450002
+            },
+            "stationary_target": {
+                "X": 158.76401951139158,
+                "Y": 188.89516075089406
+            },
+            "stationary_lerp_progress": 0.65,
+            "resource": "moss",
+            "job": {
+                "id": 2,
+                "node_id": 0,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 95.09999999999887
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "pick_up_resource",
+                    "node_id": 0,
+                    "resource_type": "moss"
+                },
+                {
+                    "step_type": "find_consumer",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "drop_resource",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 3,
+            "traversing_path": [
+                2,
+                3,
+                6,
+                7
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 3,
+                    "node_2": 6
+                },
+                "length": 142.5963192562411
+            },
+            "traversing_step": 2,
+            "traversing_progress": 54,
+            "stationary_pos": {
+                "X": 290.71882064709,
+                "Y": 105.3853794315911
+            },
+            "stationary_target": {
+                "X": 290.72794943212955,
+                "Y": 105.39279571321363
+            },
+            "stationary_lerp_progress": 0.7000000000000001,
+            "resource": "moss",
+            "job": {
+                "id": 6,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 4,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 197.26077471242388,
+                "Y": 104.36625975217453
+            },
+            "stationary_target": {
+                "X": 197.26077482481642,
+                "Y": 104.36625955813719
+            },
+            "stationary_lerp_progress": 0.9500000000000003,
+            "resource": "moss",
+            "job": {
+                "id": 4,
+                "node_id": 4,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 58.60000000000056
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 1,
+            "traversing_path": [
+                2,
+                3,
+                4
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 1,
+                    "node_2": 2
+                },
+                "length": 162.81566600734706
+            },
+            "traversing_step": 0,
+            "traversing_progress": 108,
+            "stationary_pos": {
+                "X": 446.5580039409538,
+                "Y": 45.917052390672495
+            },
+            "stationary_target": {
+                "X": 457.58630479455974,
+                "Y": 53.639060927540406
+            },
+            "stationary_lerp_progress": 0,
+            "resource": "moss",
+            "job": {
+                "id": 14,
+                "node_id": 8,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 2,
+            "traversing_path": [
+                2,
+                3,
+                6,
+                9
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 2,
+                    "node_2": 3
+                },
+                "length": 135.14618397571888
+            },
+            "traversing_step": 1,
+            "traversing_progress": 106,
+            "stationary_pos": {
+                "X": 347.402886398783,
+                "Y": 38.05327713792293
+            },
+            "stationary_target": {
+                "X": 351.7465615674838,
+                "Y": 42.929464969553294
+            },
+            "stationary_lerp_progress": 0,
+            "resource": "moss",
+            "job": {
+                "id": 10,
+                "node_id": 7,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 4,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 187.94591298555054,
+                "Y": 114.17647669292768
+            },
+            "stationary_target": {
+                "X": 176.12205677140346,
+                "Y": 113.7406981215562
+            },
+            "stationary_lerp_progress": 0.15000000000000002,
+            "resource": "moss",
+            "job": {
+                "id": 3,
+                "node_id": 4,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 91.99999999999905
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "drop_resource",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 2,
+            "traversing_path": [
+                6,
+                3,
+                2,
+                1
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 1,
+                    "node_2": 2
+                },
+                "length": 162.81566600734706
+            },
+            "traversing_step": 3,
+            "traversing_progress": 128,
+            "stationary_pos": {
+                "X": 451.1007005778142,
+                "Y": 41.53054960358524
+            },
+            "stationary_target": {
+                "X": 451.0899549584601,
+                "Y": 41.52705761696323
+            },
+            "stationary_lerp_progress": 0.7000000000000001,
+            "resource": "moss",
+            "job": {
+                "id": 13,
+                "node_id": 8,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 0,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 179.22721911477947,
+                "Y": 189.93239367779864
+            },
+            "stationary_target": {
+                "X": 179.2272337897757,
+                "Y": 189.9323894894573
+            },
+            "stationary_lerp_progress": 0.9000000000000002,
+            "resource": "",
+            "job": {
+                "id": 0,
+                "node_id": 0,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 57.10000000000054
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 8,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 432.3440013789419,
+                "Y": 40.03442852515554
+            },
+            "stationary_target": {
+                "X": 432.23514473019196,
+                "Y": 37.795107398689716
+            },
+            "stationary_lerp_progress": 0.35,
+            "resource": "moss",
+            "job": {
+                "id": 14,
+                "node_id": 8,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 10.499999999999979
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "find_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 8,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 359.3844289522871,
+                "Y": 47.8764466919984
+            },
+            "stationary_target": {
+                "X": 359.3912184440331,
+                "Y": 47.883094851099216
+            },
+            "stationary_lerp_progress": 0.7000000000000001,
+            "resource": "moss",
+            "job": {
+                "id": 9,
+                "node_id": 7,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "start_lerp",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 6,
+            "traversing_path": [
+                6,
+                9
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 6,
+                    "node_2": 9
+                },
+                "length": 85.03281113024076
+            },
+            "traversing_step": 1,
+            "traversing_progress": 46,
+            "stationary_pos": {
+                "X": 166.26010000736056,
+                "Y": 203.7316315643549
+            },
+            "stationary_target": {
+                "X": 166.2689347618609,
+                "Y": 203.7271254295469
+            },
+            "stationary_lerp_progress": 0.7000000000000001,
+            "resource": "moss",
+            "job": {
+                "id": 16,
+                "node_id": 9,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 2,
+            "traversing_path": [
+                3,
+                2,
+                1
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 1,
+                    "node_2": 2
+                },
+                "length": 162.81566600734706
+            },
+            "traversing_step": 2,
+            "traversing_progress": 102,
+            "stationary_pos": {
+                "X": 295.1723915236555,
+                "Y": 84.5823128703713
+            },
+            "stationary_target": {
+                "X": 295.18130856883306,
+                "Y": 84.58690102330236
+            },
+            "stationary_lerp_progress": 0.7000000000000001,
+            "resource": "moss",
+            "job": {
+                "id": 6,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "start_lerp",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 8,
+            "traversing_path": [
+                6,
+                3,
+                2,
+                0
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 6,
+                    "node_2": 8
+                },
+                "length": 93.0023676591455
+            },
+            "traversing_step": 0,
+            "traversing_progress": 64,
+            "stationary_pos": {
+                "X": 443.83881370383443,
+                "Y": 144.7682259280164
+            },
+            "stationary_target": {
+                "X": 441.0896627603274,
+                "Y": 147.70731418894502
+            },
+            "stationary_lerp_progress": 0.35,
+            "resource": "moss",
+            "job": {
+                "id": 1,
+                "node_id": 0,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 9,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 455.216476532936,
+                "Y": 126.33006222769862
+            },
+            "stationary_target": {
+                "X": 455.2619881327061,
+                "Y": 126.33194073286208
+            },
+            "stationary_lerp_progress": 0.65,
+            "resource": "moss",
+            "job": {
+                "id": 17,
+                "node_id": 9,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 76.8999999999999
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "start_lerp",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 6,
+            "traversing_path": [
+                6,
+                7
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 6,
+                    "node_2": 7
+                },
+                "length": 65.25464285991674
+            },
+            "traversing_step": 1,
+            "traversing_progress": 10,
+            "stationary_pos": {
+                "X": 301.60625483053263,
+                "Y": 91.41961395345878
+            },
+            "stationary_target": {
+                "X": 300.69883658552584,
+                "Y": 91.0503928568638
+            },
+            "stationary_lerp_progress": 0.35,
+            "resource": "moss",
+            "job": {
+                "id": 9,
+                "node_id": 7,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 5,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 291.45624511715334,
+                "Y": 90.52051483724017
+            },
+            "stationary_target": {
+                "X": 289.59394217108536,
+                "Y": 84.10299314172504
+            },
+            "stationary_lerp_progress": 0.25,
+            "resource": "moss",
+            "job": {
+                "id": 8,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 78.19999999999983
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 7,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 351.97393619887544,
+                "Y": 31.766285806536665
+            },
+            "stationary_target": {
+                "X": 352.01327027698494,
+                "Y": 31.73425962969926
+            },
+            "stationary_lerp_progress": 0.65,
+            "resource": "moss",
+            "job": {
+                "id": 10,
+                "node_id": 7,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 73.4000000000001
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "drop_resource",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 3,
+            "traversing_path": [
+                6,
+                3,
+                2,
+                1
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 2,
+                    "node_2": 3
+                },
+                "length": 135.14618397571888
+            },
+            "traversing_step": 2,
+            "traversing_progress": 44,
+            "stationary_pos": {
+                "X": 188.8466267763203,
+                "Y": 121.73015243901209
+            },
+            "stationary_target": {
+                "X": 188.83389558159917,
+                "Y": 121.73349874747603
+            },
+            "stationary_lerp_progress": 0.7000000000000001,
+            "resource": "moss",
+            "job": {
+                "id": 3,
+                "node_id": 4,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 5,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 295.60191295021536,
+                "Y": 94.56333994473492
+            },
+            "stationary_target": {
+                "X": 292.5295926320015,
+                "Y": 90.47354385382384
+            },
+            "stationary_lerp_progress": 0.05,
+            "resource": "moss",
+            "job": {
+                "id": 6,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 31.60000000000018
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 7,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 350.94980851362976,
+                "Y": 39.811624774868534
+            },
+            "stationary_target": {
+                "X": 349.1363071120576,
+                "Y": 41.04176420517655
+            },
+            "stationary_lerp_progress": 0.39999999999999997,
+            "resource": "",
+            "job": {
+                "id": 11,
+                "node_id": 7,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 64.50000000000061
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 8,
+            "traversing_path": null,
+            "traversing_connection": null,
+            "traversing_step": 0,
+            "traversing_progress": 0,
+            "stationary_pos": {
+                "X": 448.4890676306711,
+                "Y": 46.94414200441038
+            },
+            "stationary_target": {
+                "X": 448.4890680683765,
+                "Y": 46.944142187808936
+            },
+            "stationary_lerp_progress": 0.9500000000000003,
+            "resource": "moss",
+            "job": {
+                "id": 13,
+                "node_id": 8,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 81.69999999999963
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 7,
+            "traversing_path": [
+                6,
+                3,
+                2,
+                0
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 6,
+                    "node_2": 7
+                },
+                "length": 65.25464285991674
+            },
+            "traversing_step": 0,
+            "traversing_progress": 56,
+            "stationary_pos": {
+                "X": 167.13508029931268,
+                "Y": 208.3675038558697
+            },
+            "stationary_target": {
+                "X": 166.29482959332717,
+                "Y": 210.82442360841424
+            },
+            "stationary_lerp_progress": 0,
+            "resource": "moss",
+            "job": {
+                "id": 0,
+                "node_id": 0,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
+        },
+        {
+            "procedure": [
+                {
+                    "step_type": "traverse",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "start_lerp",
+                    "node_id": 0,
+                    "resource_type": ""
+                },
+                {
+                    "step_type": "do_job",
+                    "node_id": 0,
+                    "resource_type": ""
+                }
+            ],
+            "node": 3,
+            "traversing_path": [
+                6,
+                3,
+                5
+            ],
+            "traversing_connection": {
+                "nodes": {
+                    "node_1": 3,
+                    "node_2": 5
+                },
+                "length": 112.24662383666505
+            },
+            "traversing_step": 2,
+            "traversing_progress": 14,
+            "stationary_pos": {
+                "X": 193.53655864764116,
+                "Y": 121.12079562040353
+            },
+            "stationary_target": {
+                "X": 195.4786552487519,
+                "Y": 119.0793129453039
+            },
+            "stationary_lerp_progress": 0,
+            "resource": "",
+            "job": {
+                "id": 7,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "job_progress": 0
         }
     ],
-    "unassigned_tasks": {
-        "tasks": null,
-        "halted_tasks": null
+    "jobs": {
+        "occupied": {
+            "0": {
+                "id": 0,
+                "node_id": 0,
+                "job_type": "grow_moss"
+            },
+            "1": {
+                "id": 1,
+                "node_id": 0,
+                "job_type": "grow_moss"
+            },
+            "10": {
+                "id": 10,
+                "node_id": 7,
+                "job_type": "grow_moss"
+            },
+            "11": {
+                "id": 11,
+                "node_id": 7,
+                "job_type": "grow_moss"
+            },
+            "12": {
+                "id": 12,
+                "node_id": 8,
+                "job_type": "grow_moss"
+            },
+            "13": {
+                "id": 13,
+                "node_id": 8,
+                "job_type": "grow_moss"
+            },
+            "14": {
+                "id": 14,
+                "node_id": 8,
+                "job_type": "grow_moss"
+            },
+            "15": {
+                "id": 15,
+                "node_id": 9,
+                "job_type": "grow_moss"
+            },
+            "16": {
+                "id": 16,
+                "node_id": 9,
+                "job_type": "grow_moss"
+            },
+            "17": {
+                "id": 17,
+                "node_id": 9,
+                "job_type": "grow_moss"
+            },
+            "2": {
+                "id": 2,
+                "node_id": 0,
+                "job_type": "grow_moss"
+            },
+            "3": {
+                "id": 3,
+                "node_id": 4,
+                "job_type": "grow_moss"
+            },
+            "4": {
+                "id": 4,
+                "node_id": 4,
+                "job_type": "grow_moss"
+            },
+            "5": {
+                "id": 5,
+                "node_id": 4,
+                "job_type": "grow_moss"
+            },
+            "6": {
+                "id": 6,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "7": {
+                "id": 7,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "8": {
+                "id": 8,
+                "node_id": 5,
+                "job_type": "grow_moss"
+            },
+            "9": {
+                "id": 9,
+                "node_id": 7,
+                "job_type": "grow_moss"
+            }
+        },
+        "available": {},
+        "halted": {}
+    },
+    "consumers": {
+        "moss": [
+            1,
+            10
+        ]
+    },
+    "producers": {
+        "moss": [
+            0,
+            4,
+            5,
+            7,
+            8,
+            9
+        ]
     }
 }
