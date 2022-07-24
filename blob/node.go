@@ -2,8 +2,6 @@ package blob
 
 import (
 	"errors"
-	"fmt"
-	"image/color"
 	"math"
 	"math/rand"
 
@@ -19,10 +17,17 @@ const (
 	ResourceTypeMoss ResourceType = "moss"
 )
 
-func (resourceType ResourceType) Render(rend *render.Renderer, pos pixel.Vec) {
-	switch resourceType {
-	case ResourceTypeMoss:
-		rend.Circle(pos, color.RGBA{153, 255, 102, 255}, 3, 0)
+type ResourceConfig struct {
+	Graphics []*render.Primitive
+}
+
+func (resourceType ResourceType) Render(
+	rend *render.Renderer,
+	conf *BlobConfig,
+	positions ...pixel.Vec,
+) {
+	for _, pos := range positions {
+		rend.Primitives(pos, conf.Resources[resourceType].Graphics...)
 	}
 }
 
@@ -40,6 +45,7 @@ type NodeConfig struct {
 	Consumes         []ResourceType       `json:"consumes"`
 	Produces         []ResourceType       `json:"produces"`
 	Jobs             []JobType            `json:"jobs"`
+	Graphics         []*render.Primitive  `json:"graphics"`
 }
 
 type Node struct {
@@ -112,24 +118,13 @@ func (n *Node) Jobs() []*Job {
 }
 
 func (n *Node) Render(rend *render.Renderer) {
-	switch n.nodeType {
-	case NodeTypeNone:
-		rend.Circle(n.pos, color.RGBA{255, 255, 255, 255}, n.conf.Radius, 0)
-	case NodeTypeMossFarm:
-		rend.Circle(n.pos, color.RGBA{0, 102, 0, 255}, n.conf.Radius, 0)
-		rend.Circle(n.pos, color.RGBA{0, 153, 0, 255}, n.conf.Radius, 3)
-	case NodeTypeMossFermentationChamber:
-		rend.Circle(n.pos, color.RGBA{0, 153, 153, 255}, n.conf.Radius, 0)
-		rend.Circle(n.pos, color.RGBA{0, 102, 102, 255}, n.conf.Radius, 3)
-	}
+	rend.Primitives(n.pos, n.conf.Graphics...)
 
 	for resourceType, positions := range n.resources {
-		for _, pos := range positions {
-			resourceType.Render(rend, pos)
-		}
+		resourceType.Render(rend, n.blob.conf, positions...)
 	}
 
-	rend.Text(n.pos, color.RGBA{255, 0, 0, 255}, fmt.Sprintf("%d", n.id), 1)
+	// rend.Text(n.pos, color.RGBA{255, 0, 0, 255}, fmt.Sprintf("%d", n.id), 1)
 }
 
 func (n *Node) Update() {

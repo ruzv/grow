@@ -1,22 +1,22 @@
 package blob
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"image/color"
 	"math"
 	"math/rand"
-	"os"
 
 	"private/grow/render"
 
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/pixelgl"
 )
 
 type BlobConfig struct {
-	Nodes map[NodeType]*NodeConfig `json:"nodes"`
-	Jobs  map[JobType]*JobConfig   `json:"jobs"`
+	Nodes     map[NodeType]*NodeConfig         `json:"nodes"`
+	Jobs      map[JobType]*JobConfig           `json:"jobs"`
+	Resources map[ResourceType]*ResourceConfig `json:"resources"`
 }
 
 type Blob struct {
@@ -32,6 +32,7 @@ type Blob struct {
 	pathCache           map[string][]int       // TODO: make this a map[ConnectionIDs][]int
 	connected           map[ConnectionIDs]bool
 
+	rend *render.Renderer
 	conf *BlobConfig
 }
 
@@ -50,7 +51,7 @@ type BlobJSON struct {
 	// PathCache           map[ConnectionIDs][]int `json:"path_cache"`
 }
 
-func NewBlob(bj *BlobJSON, conf *BlobConfig) *Blob {
+func NewBlob(bj *BlobJSON, conf *BlobConfig, win *pixelgl.Window) *Blob {
 	b := &Blob{
 		nodesIdentifier:     bj.NodesIdentifier,
 		resourcesIdentifier: bj.ResourcesIdentifier,
@@ -60,6 +61,7 @@ func NewBlob(bj *BlobJSON, conf *BlobConfig) *Blob {
 		Units:               make([]*Unit, 0, len(bj.Units)),
 		pathCache:           make(map[string][]int),
 		connected:           make(map[ConnectionIDs]bool),
+		rend:                render.NewRenderer(win),
 		conf:                conf,
 	}
 
@@ -117,53 +119,23 @@ func (b *Blob) ToJSON() *BlobJSON {
 	return bj
 }
 
-func LoadBlob(filepath string, conf *BlobConfig) (*Blob, error) {
-	f, err := os.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-
-	defer f.Close()
-
-	bj := &BlobJSON{}
-
-	err = json.NewDecoder(f).Decode(&bj)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewBlob(bj, conf), nil
-}
-
-func (b *Blob) Save(filepath string) error {
-	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o666)
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-
-	encoder := json.NewEncoder(f)
-	encoder.SetIndent("", "    ")
-
-	return encoder.Encode(b.ToJSON())
-}
-
-func (b *Blob) Render(rend *render.Renderer) {
+func (b *Blob) Render() {
 	for _, conn := range b.Connections {
 		n1 := b.Nodes[conn.Nodes.Node1]
 		n2 := b.Nodes[conn.Nodes.Node2]
 
-		rend.Line(n1.pos, n2.pos, color.RGBA{255, 255, 255, 255}, 8)
+		b.rend.Line(n1.pos, n2.pos, color.RGBA{255, 255, 255, 255}, 8)
 	}
 
 	for _, node := range b.Nodes {
-		node.Render(rend)
+		node.Render(b.rend)
 	}
 
 	for _, unit := range b.Units {
-		unit.Render(rend)
+		unit.Render(b.rend)
 	}
+
+	b.rend.Render()
 }
 
 func (b *Blob) Update() {
@@ -487,6 +459,7 @@ func (jq *JobQueue) ToJSON() *JobQueueJSON {
 func (jq *JobQueue) GetJob() (*Job, error) {
 	job, err := jq.getAvailable()
 	if err != nil {
+		// TODO: introduce halted job randomly
 		job, err = jq.getHalted()
 		if err != nil {
 			return nil, err

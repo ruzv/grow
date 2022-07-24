@@ -163,7 +163,7 @@ func (u *Unit) Render(rend *render.Renderer) {
 	rend.Circle(pos, color.RGBA{50, 50, 50, 255}, 6, 0)
 
 	if u.resource != ResourceTypeNone {
-		u.resource.Render(rend, pos)
+		u.resource.Render(rend, u.blob.conf, pos)
 	}
 }
 
@@ -326,10 +326,9 @@ func (u *Unit) Update() {
 
 	case FindConsumer:
 		consumerNodeID, err := u.blob.FindConsumerNodeID(u.resource)
-		fmt.Println(consumerNodeID, err)
 		if err != nil {
 			// TODO: figure out what to do here. carried resource gets lost.
-
+			u.resource = ResourceTypeNone
 			u.ClearProcedure()
 			u.SetCurrentProcedureStep(StartWondening)
 			return
@@ -337,6 +336,7 @@ func (u *Unit) Update() {
 
 		path, err := u.blob.Dijkstra(u.nodeID, consumerNodeID)
 		if err != nil {
+			u.resource = ResourceTypeNone
 			u.ClearProcedure()
 			u.SetCurrentProcedureStep(StartWondening)
 			return
@@ -391,8 +391,6 @@ func (u *Unit) CurrentProcedureStep() *ProcedureStep {
 }
 
 func (u *Unit) SetCurrentProcedureStep(stepType ProcedureStepType) {
-	fmt.Println(stepType)
-
 	if len(u.procedure) == 0 {
 		u.procedure = make([]*ProcedureStep, 1)
 	}
@@ -408,7 +406,6 @@ func (u *Unit) NextProcedureStep() {
 	}
 
 	u.procedure = u.procedure[1:]
-	fmt.Println(u.procedure[0])
 }
 
 func (u *Unit) ClearProcedure() {

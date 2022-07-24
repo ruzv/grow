@@ -1,4 +1,10 @@
 {
+    "view": {
+        "pan_speed": 10,
+        "zoom_speed": 1.1,
+        "max_zoom": 6,
+        "min_zoom": 0.1
+    },
     "blob": {
         "nodes": {
             "none": {
@@ -6,7 +12,14 @@
                 "resource_capacity": {
                     "moss": 0
                 },
-                "jobs": []
+                "jobs": [],
+                "graphics": [
+                    {
+                        "type": "circle",
+                        "color": { "R": 255, "G": 255, "B": 255, "A": 255 },
+                        "radius": 15
+                    }
+                ]
             },
             "moss_farm": {
                 "radius": 25,
@@ -14,7 +27,20 @@
                     "moss": 10
                 },
                 "jobs": ["grow_moss", "grow_moss", "grow_moss"],
-                "produces": ["moss"]
+                "produces": ["moss"],
+                "graphics": [
+                    {
+                        "type": "circle",
+                        "color": { "R": 102, "G": 153, "B": 0, "A": 255 },
+                        "radius": 25
+                    },
+                    {
+                        "type": "circle",
+                        "color": { "R": 68, "G": 102, "B": 0, "A": 255 },
+                        "radius": 25,
+                        "thickness": 3
+                    }
+                ]
             },
             "moss_fermentation_chamber": {
                 "radius": 20,
@@ -22,13 +48,37 @@
                     "moss": 30
                 },
                 "consumes": ["moss"],
-                "jobs": []
+                "jobs": [],
+                "graphics": [
+                    {
+                        "type": "circle",
+                        "color": { "R": 0, "G": 153, "B": 153, "A": 255 },
+                        "radius": 20
+                    },
+                    {
+                        "type": "circle",
+                        "color": { "R": 0, "G": 102, "B": 102, "A": 255 },
+                        "radius": 20,
+                        "thickness": 3
+                    }
+                ]
             }
         },
         "jobs": {
             "grow_moss": {
                 "produced_resource": "moss",
                 "production_speed": 0.1
+            }
+        },
+        "resources": {
+            "moss": {
+                "graphics": [
+                    {
+                        "type": "circle",
+                        "color": { "R": 0, "G": 122, "B": 0, "A": 255 },
+                        "radius": 3
+                    }
+                ]
             }
         }
     }

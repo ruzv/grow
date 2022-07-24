@@ -1,6 +1,7 @@
 package render
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/faiface/pixel"
@@ -14,6 +15,7 @@ import (
 // drawing of primitives such as lines and circles.
 type Renderer struct {
 	win       *pixelgl.Window
+	batch     *pixel.Batch
 	atlas     *text.Atlas
 	textBoxes []*TextBox
 }
@@ -21,6 +23,7 @@ type Renderer struct {
 func NewRenderer(win *pixelgl.Window) *Renderer {
 	return &Renderer{
 		win:   win,
+		batch: pixel.NewBatch(&pixel.TrianglesData{}, nil),
 		atlas: text.NewAtlas(basicfont.Face7x13, text.ASCII),
 	}
 }
@@ -28,6 +31,38 @@ func NewRenderer(win *pixelgl.Window) *Renderer {
 func (r *Renderer) Render() {
 	for _, tb := range r.textBoxes {
 		tb.writer.Draw(r.win, pixel.IM.Scaled(tb.writer.Orig, tb.scale))
+	}
+
+	r.batch.Draw(r.win)
+	r.batch.Clear()
+}
+
+type PrimitiveType string
+
+const (
+	PrimitiveCircle PrimitiveType = "circle"
+)
+
+type Primitive struct {
+	Type      PrimitiveType `json:"type"`
+	Offset    pixel.Vec     `json:"offset"`
+	Color     color.RGBA    `json:"color"`
+	Radius    float64       `json:"radius"`
+	Thickness float64       `json:"thickness"`
+}
+
+func (r *Renderer) Primitives(pos pixel.Vec, prim ...*Primitive) {
+	for _, p := range prim {
+		r.primitive(pos, p)
+	}
+}
+
+func (r *Renderer) primitive(pos pixel.Vec, prim *Primitive) {
+	switch prim.Type {
+	case PrimitiveCircle:
+		r.Circle(pos.Add(prim.Offset), prim.Color, prim.Radius, prim.Thickness)
+	default:
+		fmt.Println("Unknown primitive type:", prim.Type)
 	}
 }
 
@@ -43,7 +78,7 @@ func (r *Renderer) Circle(
 	imd.Push(pos)
 	imd.Circle(radius, thickness)
 
-	imd.Draw(r.win)
+	imd.Draw(r.batch)
 }
 
 func (r *Renderer) Line(
@@ -57,7 +92,7 @@ func (r *Renderer) Line(
 	imd.Push(startPos, endPos)
 	imd.Line(thickness)
 
-	imd.Draw(r.win)
+	imd.Draw(r.batch)
 }
 
 func (r *Renderer) Text(
