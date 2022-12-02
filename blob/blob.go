@@ -17,19 +17,21 @@ type BlobConfig struct {
 	Nodes     map[NodeType]*NodeConfig         `json:"nodes"`
 	Jobs      map[JobType]*JobConfig           `json:"jobs"`
 	Resources map[ResourceType]*ResourceConfig `json:"resources"`
+	Unit      *UnitConfig                      `json:"unit"`
 }
 
 type Blob struct {
 	nodesIdentifier     int
 	resourcesIdentifier int
 	jobsIdentifier      int
+	unitsIdentifier     int
 	Nodes               map[int]*Node
 	Connections         []*Connection // TODO: make this a map[ConnectionIDs]*connection
-	Units               []*Unit
+	Units               map[int]*Unit
 	jobs                *JobQueue
-	consumers           map[ResourceType][]int // mapping from resource type to node IDs
-	producers           map[ResourceType][]int // mapping from resource type to node IDs
-	pathCache           map[string][]int       // TODO: make this a map[ConnectionIDs][]int
+	consumers           map[ResourceType]map[int][]int // mapping from resource type to map of priorities to node IDs
+	producers           map[ResourceType]map[int][]int // mapping from resource type to node IDs
+	pathCache           map[string][]int               // TODO: make this a map[ConnectionIDs][]int
 	connected           map[ConnectionIDs]bool
 
 	rend *render.Renderer
@@ -37,15 +39,16 @@ type Blob struct {
 }
 
 type BlobJSON struct {
-	NodesIdentifier     int                    `json:"nodes_identifier"`
-	ResourcesIdentifier int                    `json:"resources_identifier"`
-	JobsIdentifier      int                    `json:"jobs_identifier"`
-	Nodes               map[int]*NodeJSON      `json:"nodes"`
-	Connections         []*Connection          `json:"connections"`
-	Units               []*UnitJSON            `json:"units"`
-	Jobs                *JobQueueJSON          `json:"jobs"`
-	Consumers           map[ResourceType][]int `json:"consumers"`
-	Producers           map[ResourceType][]int `json:"producers"`
+	NodesIdentifier     int                            `json:"nodes_identifier"`
+	ResourcesIdentifier int                            `json:"resources_identifier"`
+	JobsIdentifier      int                            `json:"jobs_identifier"`
+	UnitsIdentifier     int                            `json:"units_identifier"`
+	Nodes               map[int]*NodeJSON              `json:"nodes"`
+	Connections         []*Connection                  `json:"connections"`
+	Units               map[int]*UnitJSON              `json:"units"`
+	Jobs                *JobQueueJSON                  `json:"jobs"`
+	Consumers           map[ResourceType]map[int][]int `json:"consumers"`
+	Producers           map[ResourceType]map[int][]int `json:"producers"`
 
 	// TODO: SAVE PATH CACHE
 	// PathCache           map[ConnectionIDs][]int `json:"path_cache"`
@@ -56,9 +59,10 @@ func NewBlob(bj *BlobJSON, conf *BlobConfig, win *pixelgl.Window) *Blob {
 		nodesIdentifier:     bj.NodesIdentifier,
 		resourcesIdentifier: bj.ResourcesIdentifier,
 		jobsIdentifier:      bj.JobsIdentifier,
+		unitsIdentifier:     bj.UnitsIdentifier,
 		Nodes:               make(map[int]*Node),
 		Connections:         bj.Connections,
-		Units:               make([]*Unit, 0, len(bj.Units)),
+		Units:               make(map[int]*Unit),
 		pathCache:           make(map[string][]int),
 		connected:           make(map[ConnectionIDs]bool),
 		rend:                render.NewRenderer(win),
@@ -70,7 +74,7 @@ func NewBlob(bj *BlobJSON, conf *BlobConfig, win *pixelgl.Window) *Blob {
 	}
 
 	for _, unit := range bj.Units {
-		b.Units = append(b.Units, NewUnit(unit, b))
+		b.Units[unit.ID] = NewUnit(unit, b)
 	}
 
 	for _, conn := range bj.Connections {
@@ -79,12 +83,12 @@ func NewBlob(bj *BlobJSON, conf *BlobConfig, win *pixelgl.Window) *Blob {
 
 	b.consumers = bj.Consumers
 	if b.consumers == nil {
-		b.consumers = make(map[ResourceType][]int)
+		b.consumers = make(map[ResourceType]map[int][]int)
 	}
 
 	b.producers = bj.Producers
 	if b.producers == nil {
-		b.producers = make(map[ResourceType][]int)
+		b.producers = make(map[ResourceType]map[int][]int)
 	}
 
 	b.jobs = NewJobQueue(bj.Jobs, conf, b)
@@ -98,6 +102,7 @@ func (b *Blob) ToJSON() *BlobJSON {
 	bj.NodesIdentifier = b.nodesIdentifier
 	bj.ResourcesIdentifier = b.resourcesIdentifier
 	bj.JobsIdentifier = b.jobsIdentifier
+	bj.UnitsIdentifier = b.unitsIdentifier
 
 	bj.Nodes = make(map[int]*NodeJSON)
 	for id, node := range b.Nodes {
@@ -106,9 +111,9 @@ func (b *Blob) ToJSON() *BlobJSON {
 
 	bj.Connections = b.Connections
 
-	bj.Units = make([]*UnitJSON, len(b.Units))
-	for i, unit := range b.Units {
-		bj.Units[i] = unit.ToJSON()
+	bj.Units = make(map[int]*UnitJSON)
+	for id, unit := range b.Units {
+		bj.Units[id] = unit.ToJSON()
 	}
 
 	bj.Jobs = b.jobs.ToJSON()
@@ -159,12 +164,24 @@ func (b *Blob) AddNode(pos pixel.Vec, nodeType NodeType) int {
 		b.conf,
 	)
 
-	for _, res := range node.conf.Consumes {
-		b.consumers[res] = append(b.consumers[res], node.id)
+	for res, priority := range node.conf.Consumes {
+		priorities := b.consumers[res]
+		if priorities == nil {
+			priorities = make(map[int][]int)
+			b.consumers[res] = priorities
+		}
+
+		priorities[priority] = append(b.consumers[res][priority], node.id)
 	}
 
-	for _, res := range node.conf.Produces {
-		b.producers[res] = append(b.producers[res], node.id)
+	for res, priority := range node.conf.Produces {
+		priorities := b.producers[res]
+		if priorities == nil {
+			priorities = make(map[int][]int)
+			b.producers[res] = priorities
+		}
+
+		priorities[priority] = append(priorities[priority], node.id)
 	}
 
 	b.jobs.Add(node.Jobs()...)
@@ -176,14 +193,12 @@ func (b *Blob) AddNode(pos pixel.Vec, nodeType NodeType) int {
 }
 
 func (b *Blob) AddUnit(nodeID int) *Unit {
-	u := &Unit{
-		// TODO: change to pretty method call when it is implemented
-		procedure: []*ProcedureStep{{stepType: StartWondening}},
-		nodeID:    nodeID,
-		blob:      b,
-	}
+	u := NewUnit(&UnitJSON{NodeID: nodeID}, b)
+	u.id = b.unitsIdentifier
+	b.unitsIdentifier++
+	u.SetCurrentProcedureStep(Wander)
 
-	b.Units = append(b.Units, u)
+	b.Units[u.id] = u
 
 	return u
 }
@@ -352,48 +367,126 @@ func (b *Blob) Dijkstra(startNodeID, targetNodeID int) ([]int, error) {
 	return path, nil
 }
 
-func (b *Blob) FindConsumerNodeID(resourceType ResourceType) (int, error) {
-	ids, ok := b.consumers[resourceType]
+func (b *Blob) GetConsumerNodeID(resourceType ResourceType) (int, error) {
+	priorities, ok := b.consumers[resourceType]
 	if !ok {
 		return 0, errors.New("no consumer found")
 	}
 
-	if len(ids) == 0 {
-		return 0, errors.New("no consumer found")
+	for priority := 0; priority < 10; priority++ {
+		ids, ok := priorities[priority]
+		if !ok {
+			continue
+		}
+
+		if len(ids) == 0 {
+			continue
+		}
+
+		var (
+			max   int
+			maxID int
+			found bool
+		)
+
+		for _, id := range ids {
+			c := b.Nodes[id].AvailableCapacity()
+			if c > max {
+				max = c
+				maxID = id
+				found = true
+			}
+		}
+
+		if found {
+			return maxID, nil
+		}
 	}
 
+	return 0, errors.New("no consumer found")
+}
+
+// GetProducerNodeID returns node id of a producer with highest priority and
+// most resources.
+func (b *Blob) GetProducerNodeID() (int, ResourceType, error) {
 	var (
-		max   int
-		minID int
-		found bool
+		max             int
+		maxID           int
+		maxResourceType ResourceType
+		found           bool
 	)
 
-	for _, id := range ids {
-		c := b.Nodes[id].AvailableCapacity(resourceType)
+	for res := range b.producers {
+		nodeID, c, err := b.GetResourceProducerNodeID(res)
+		if err != nil {
+			continue
+		}
+
 		if c > max {
 			max = c
-			minID = id
+			maxID = nodeID
+			maxResourceType = res
 			found = true
 		}
 	}
 
 	if !found {
-		return 0, errors.New("no consumer found")
+		return 0, "", errors.New("no producer found")
 	}
 
-	return minID, nil
+	return maxID, maxResourceType, nil
 }
 
-func (b *Blob) FindProducerNodeID() (int, ResourceType, error) {
-	for resourceType, ids := range b.producers {
+// GetResourceProducerNodeID returns node id of highest priority producer of
+// specified resource type with highest amount of resources. resource amount is returned as second return value.
+func (b *Blob) GetResourceProducerNodeID(resourceType ResourceType) (int, int, error) {
+	priorities, ok := b.producers[resourceType]
+	if !ok {
+		return 0, 0, errors.New("no producer found")
+	}
+
+	for priority := 0; priority < 10; priority++ {
+		ids, ok := priorities[priority]
+		if !ok {
+			continue
+		}
+
+		if len(ids) == 0 {
+			continue
+		}
+
+		var (
+			max   int
+			maxID int
+			found bool
+		)
+
 		for _, id := range ids {
-			if b.Nodes[id].Resources(resourceType) > 0 {
-				return id, resourceType, nil
+			c := b.Nodes[id].ResourceCount(resourceType)
+			if c > max {
+				max = c
+				maxID = id
+				found = true
 			}
+		}
+
+		if found {
+			return maxID, max, nil
 		}
 	}
 
-	return 0, "", errors.New("no producer found")
+	return 0, 0, errors.New("no producer found")
+}
+
+func (b *Blob) RemoveResources() {
+	for _, node := range b.Nodes {
+		node.RemoveResources()
+	}
+}
+
+func (b *Blob) RemoveUnits() {
+	b.Units = make(map[int]*Unit)
+	b.jobs.Reset()
 }
 
 type JobQueue struct {
@@ -543,6 +636,13 @@ func (jq *JobQueue) Halt(job *Job) {
 	delete(jq.occupied, job.id)
 
 	jq.halted[job.id] = job
+}
+
+func (jq *JobQueue) Reset() {
+	for _, job := range jq.occupied {
+		jq.available[job.id] = job
+		delete(jq.occupied, job.id)
+	}
 }
 
 func RandomSliceElement[T any](slice []T) T {

@@ -9,26 +9,23 @@ import (
 	"github.com/faiface/pixel"
 )
 
-// action - single step in units procedure
-// procedure - sequence of procedureSteps that the unit tries to do
-// procedureStep - groups together the action and the reqired meta-data for that
-// action
-
-type ProcedureStepType string // ProcedureStepType
+type ProcedureStepType string
 
 const (
-	DoNothing         ProcedureStepType = "do_nothing"
-	StartWondening    ProcedureStepType = "start_wondening"
-	FindTraversalPath ProcedureStepType = "find_traversal_path" // rename TraverseTo
-	Traverse          ProcedureStepType = "traverse"
-	FinishTraversing  ProcedureStepType = "finish_traversing"
-	FindTask          ProcedureStepType = "find_task"
-	StartLerp         ProcedureStepType = "start_lerp"
-	PickUpResource    ProcedureStepType = "pick_up_resource"
-	DropResource      ProcedureStepType = "drop_resource"
-	FindConsumer      ProcedureStepType = "find_consumer"
-	FindJob           ProcedureStepType = "find_job"
-	DoJob             ProcedureStepType = "do_job"
+	DoNothing      ProcedureStepType = "do_nothing"
+	Wander         ProcedureStepType = "wander"
+	TraverseTo     ProcedureStepType = "traverse_to"
+	Traverse       ProcedureStepType = "traverse"
+	StartCarry     ProcedureStepType = "start_carry"
+	StartLerp      ProcedureStepType = "start_lerp"
+	PickUpResource ProcedureStepType = "pick_up_resource"
+	DropResource   ProcedureStepType = "drop_resource"
+	FindConsumer   ProcedureStepType = "find_consumer"
+	FindJob        ProcedureStepType = "find_job"
+	DoJob          ProcedureStepType = "do_job"
+	FindTask       ProcedureStepType = "find_task"
+	FindFood       ProcedureStepType = "find_food"
+	Eat            ProcedureStepType = "eat"
 )
 
 type ProcedureStep struct {
@@ -59,16 +56,22 @@ func (ps *ProcedureStep) ToJSON() *ProcedureStepJSON {
 	}
 }
 
-// units should try to satisfy the needs of consummers
+type UnitConfig struct {
+	TraversalSpeed float64 `json:"traversal_speed"`
+	HungerRate     float64 `json:"hunger_rate"`
+	MaxHunger      float64 `json:"max_hunger"`
+}
 
 type Unit struct {
+	id int
+
 	procedure []*ProcedureStep
 	nodeID    int
 
-	TraversingPath       []int
-	TraversingConnection *Connection
-	TraversingStep       int
-	TraversingProgress   float64
+	traversingPath       []int
+	traversingConnection *Connection
+	traversingStep       int
+	traversingProgress   float64
 
 	stationaryPos          pixel.Vec
 	stationaryTarget       pixel.Vec
@@ -79,10 +82,14 @@ type Unit struct {
 	job         *Job
 	jobProgress float64
 
+	hunger float64
+
 	blob *Blob
+	conf *UnitConfig
 }
 
 type UnitJSON struct {
+	ID        int                  `json:"id"`
 	Procedure []*ProcedureStepJSON `json:"procedure"`
 	NodeID    int                  `json:"node"`
 
@@ -99,17 +106,20 @@ type UnitJSON struct {
 
 	Job         *JobJSON `json:"job"`
 	JobProgress float64  `json:"job_progress"`
+
+	Hunger float64 `json:"hunger"`
 }
 
 func NewUnit(uj *UnitJSON, blob *Blob) *Unit {
 	u := &Unit{
+		id:        uj.ID,
 		procedure: make([]*ProcedureStep, 0, len(uj.Procedure)),
 		nodeID:    uj.NodeID,
 
-		TraversingPath:       uj.TraversingPath,
-		TraversingConnection: uj.TraversingConnection,
-		TraversingStep:       uj.TraversingStep,
-		TraversingProgress:   uj.TraversingProgress,
+		traversingPath:       uj.TraversingPath,
+		traversingConnection: uj.TraversingConnection,
+		traversingStep:       uj.TraversingStep,
+		traversingProgress:   uj.TraversingProgress,
 
 		stationaryPos:          uj.StationaryPos,
 		stationaryTarget:       uj.StationaryTarget,
@@ -120,7 +130,10 @@ func NewUnit(uj *UnitJSON, blob *Blob) *Unit {
 		job:         NewJob(uj.Job, blob.conf, blob),
 		jobProgress: uj.JobProgress,
 
+		hunger: uj.Hunger,
+
 		blob: blob,
+		conf: blob.conf.Unit,
 	}
 
 	for _, p := range uj.Procedure {
@@ -132,13 +145,14 @@ func NewUnit(uj *UnitJSON, blob *Blob) *Unit {
 
 func (u *Unit) ToJSON() *UnitJSON {
 	uj := &UnitJSON{
+		ID:        u.id,
 		Procedure: make([]*ProcedureStepJSON, 0, len(u.procedure)),
 		NodeID:    u.nodeID,
 
-		TraversingPath:       u.TraversingPath,
-		TraversingConnection: u.TraversingConnection,
-		TraversingStep:       u.TraversingStep,
-		TraversingProgress:   u.TraversingProgress,
+		TraversingPath:       u.traversingPath,
+		TraversingConnection: u.traversingConnection,
+		TraversingStep:       u.traversingStep,
+		TraversingProgress:   u.traversingProgress,
 
 		StationaryPos:          u.stationaryPos,
 		StationaryTarget:       u.stationaryTarget,
@@ -148,6 +162,8 @@ func (u *Unit) ToJSON() *UnitJSON {
 
 		Job:         u.job.ToJSON(),
 		JobProgress: u.jobProgress,
+
+		Hunger: u.hunger,
 	}
 
 	for _, p := range u.procedure {
@@ -175,10 +191,10 @@ func (u *Unit) Pos() pixel.Vec {
 
 	case Traverse:
 		start := u.blob.Nodes[u.nodeID].pos
-		target := u.blob.Nodes[u.TraversingConnection.Nodes.Opposite(u.nodeID)].pos
+		target := u.blob.Nodes[u.traversingConnection.Nodes.Opposite(u.nodeID)].pos
 
 		return start.Add(target.Sub(start).Scaled(
-			u.TraversingProgress / u.TraversingConnection.Length,
+			u.traversingProgress / u.traversingConnection.Length,
 		))
 	}
 
@@ -186,10 +202,24 @@ func (u *Unit) Pos() pixel.Vec {
 }
 
 func (u *Unit) Update() {
+	u.hunger += u.conf.HungerRate
+
 	switch u.CurrentProcedureStep().stepType {
 	case DoNothing:
 		// do nothing
-	case StartWondening:
+	case FindTask:
+		if u.hunger > u.conf.MaxHunger {
+			u.Die()
+			return
+		}
+
+		if u.hunger > 100 {
+			u.SetCurrentProcedureStep(FindFood)
+			return
+		}
+
+		u.SetCurrentProcedureStep(FindJob)
+	case Wander:
 		var nodes []*Node
 		for _, node := range u.blob.Nodes {
 			if node.id == u.nodeID {
@@ -199,18 +229,18 @@ func (u *Unit) Update() {
 		}
 
 		if len(nodes) == 0 {
-			u.SetCurrentProcedureStep(FinishTraversing)
+			u.NextProcedureStep()
 			return
 		}
 
 		path, err := u.blob.Dijkstra(u.nodeID, RandomSliceElement(nodes).id)
 		if err != nil {
-			u.SetCurrentProcedureStep(StartWondening)
+			u.SetCurrentProcedureStep(Wander)
 			return
 		}
 
 		if len(path) == 0 {
-			u.SetCurrentProcedureStep(FinishTraversing)
+			u.NextProcedureStep()
 			return
 		}
 
@@ -218,7 +248,7 @@ func (u *Unit) Update() {
 
 		u.SetCurrentProcedureStep(Traverse)
 
-	case FindTraversalPath:
+	case TraverseTo:
 		path, err := u.blob.Dijkstra(u.nodeID, u.CurrentProcedureStep().nodeID)
 		if err != nil {
 			if u.job != nil {
@@ -226,12 +256,12 @@ func (u *Unit) Update() {
 			}
 
 			u.ClearProcedure()
-			u.SetCurrentProcedureStep(StartWondening)
+			u.SetCurrentProcedureStep(Wander)
 			return
 		}
 
 		if len(path) == 0 {
-			u.SetCurrentProcedureStep(FinishTraversing)
+			u.NextProcedureStep()
 			return
 		}
 
@@ -239,42 +269,38 @@ func (u *Unit) Update() {
 		u.SetCurrentProcedureStep(Traverse)
 
 	case Traverse:
-		u.TraversingProgress += 2
+		u.traversingProgress += u.conf.TraversalSpeed
 
-		if u.TraversingProgress >= u.TraversingConnection.Length {
-			u.TraversingStep++
+		if u.traversingProgress >= u.traversingConnection.Length {
+			u.traversingStep++
 
-			u.nodeID = u.TraversingConnection.Nodes.Opposite(u.nodeID)
-			u.TraversingProgress = 0
+			u.nodeID = u.traversingConnection.Nodes.Opposite(u.nodeID)
+			u.traversingProgress = 0
 
-			if u.TraversingStep >= len(u.TraversingPath) {
-				u.TraversingPath = nil
-				u.TraversingConnection = nil
-				u.TraversingStep = 0
+			if u.traversingStep >= len(u.traversingPath) {
+				u.traversingPath = nil
+				u.traversingConnection = nil
+				u.traversingStep = 0
 
-				u.SetCurrentProcedureStep(FinishTraversing)
-
+				u.NextProcedureStep()
 				return
 			}
 
-			u.TraversingConnection = u.blob.GetConnection(
-				NewConnectionIDs(u.nodeID, u.TraversingPath[u.TraversingStep]),
+			u.traversingConnection = u.blob.GetConnection(
+				NewConnectionIDs(u.nodeID, u.traversingPath[u.traversingStep]),
 			)
 		}
-	case FinishTraversing:
-		u.NextProcedureStep()
-	case FindTask:
-		id, resourceType, err := u.blob.FindProducerNodeID()
+	case StartCarry:
+		id, resourceType, err := u.blob.GetProducerNodeID()
 		if err != nil {
-			fmt.Println(err)
 			u.ClearProcedure()
-			u.SetCurrentProcedureStep(StartWondening)
+			u.SetCurrentProcedureStep(Wander)
 			return
 		}
 
 		u.procedure = []*ProcedureStep{
 			{
-				stepType: FindTraversalPath,
+				stepType: TraverseTo,
 				nodeID:   id,
 			},
 			{
@@ -294,10 +320,6 @@ func (u *Unit) Update() {
 		u.stationaryTarget = u.blob.Nodes[u.nodeID].RandPosInNode()
 		u.NextProcedureStep()
 	case DoJob:
-		// TODO: implement job.CanDo() method that would check if all the
-		// required resources on node. This propably has to be done in procedure
-		// step StartDoingJob
-
 		u.StationaryLerp()
 
 		u.jobProgress += u.job.conf.ProductionSpeed
@@ -308,7 +330,7 @@ func (u *Unit) Update() {
 
 			// find next task or wander
 			u.ClearProcedure()
-			u.SetCurrentProcedureStep(StartWondening)
+			u.SetCurrentProcedureStep(Wander)
 		}
 	case PickUpResource:
 		err := u.blob.Nodes[u.nodeID].TakeResource(
@@ -316,7 +338,7 @@ func (u *Unit) Update() {
 		)
 		if err != nil {
 			u.ClearProcedure()
-			u.SetCurrentProcedureStep(StartWondening)
+			u.SetCurrentProcedureStep(Wander)
 			return
 		}
 
@@ -325,12 +347,12 @@ func (u *Unit) Update() {
 		u.NextProcedureStep()
 
 	case FindConsumer:
-		consumerNodeID, err := u.blob.FindConsumerNodeID(u.resource)
+		consumerNodeID, err := u.blob.GetConsumerNodeID(u.resource)
 		if err != nil {
 			// TODO: figure out what to do here. carried resource gets lost.
 			u.resource = ResourceTypeNone
 			u.ClearProcedure()
-			u.SetCurrentProcedureStep(StartWondening)
+			u.SetCurrentProcedureStep(Wander)
 			return
 		}
 
@@ -338,12 +360,12 @@ func (u *Unit) Update() {
 		if err != nil {
 			u.resource = ResourceTypeNone
 			u.ClearProcedure()
-			u.SetCurrentProcedureStep(StartWondening)
+			u.SetCurrentProcedureStep(Wander)
 			return
 		}
 
 		if len(path) == 0 {
-			u.SetCurrentProcedureStep(FinishTraversing)
+			u.NextProcedureStep()
 			return
 		}
 
@@ -353,8 +375,8 @@ func (u *Unit) Update() {
 	case DropResource:
 		err := u.blob.Nodes[u.nodeID].AddResource(u.resource)
 		if err != nil {
-			u.ClearProcedure()
-			u.SetCurrentProcedureStep(StartWondening)
+			// u.ClearProcedure()
+			u.SetCurrentProcedureStep(FindConsumer)
 			return
 		}
 
@@ -365,7 +387,13 @@ func (u *Unit) Update() {
 	case FindJob:
 		job, err := u.blob.jobs.GetJob()
 		if err != nil {
-			u.SetCurrentProcedureStep(FindTask)
+			u.SetCurrentProcedureStep(StartCarry)
+			return
+		}
+
+		if !job.CanDo() {
+			u.blob.jobs.Halt(job)
+			u.SetCurrentProcedureStep(StartCarry)
 			return
 		}
 
@@ -373,7 +401,7 @@ func (u *Unit) Update() {
 
 		u.procedure = []*ProcedureStep{
 			{
-				stepType: FindTraversalPath,
+				stepType: TraverseTo,
 				nodeID:   job.nodeID,
 			},
 			{
@@ -383,6 +411,32 @@ func (u *Unit) Update() {
 				stepType: DoJob,
 			},
 		}
+	case FindFood:
+		nodeID, _, err := u.blob.GetResourceProducerNodeID(ResourceTypeMushroom)
+		if err != nil {
+			u.SetCurrentProcedureStep(Wander)
+			return
+		}
+
+		u.procedure = []*ProcedureStep{
+			{
+				stepType: TraverseTo,
+				nodeID:   nodeID,
+			},
+			{
+				stepType: Eat,
+			},
+		}
+	case Eat:
+		err := u.blob.Nodes[u.nodeID].TakeResource(ResourceTypeMushroom)
+		if err != nil {
+			u.SetCurrentProcedureStep(Wander)
+			return
+		}
+		fmt.Println("eat")
+
+		u.hunger = 0
+		u.SetCurrentProcedureStep(FindTask)
 	}
 }
 
@@ -401,7 +455,7 @@ func (u *Unit) SetCurrentProcedureStep(stepType ProcedureStepType) {
 func (u *Unit) NextProcedureStep() {
 	// has no procedure or only one step (current one)
 	if len(u.procedure) <= 1 {
-		u.SetCurrentProcedureStep(FindJob)
+		u.SetCurrentProcedureStep(FindTask)
 		return
 	}
 
@@ -429,10 +483,17 @@ func (u *Unit) StationaryLerp() {
 }
 
 func (u *Unit) SetTraversalPath(path []int) {
-	u.TraversingPath = path
-	u.TraversingConnection = u.blob.GetConnection(
+	u.traversingPath = path
+	u.traversingConnection = u.blob.GetConnection(
 		NewConnectionIDs(u.nodeID, path[0]),
 	)
-	u.TraversingStep = 0
-	u.TraversingProgress = 0
+	u.traversingStep = 0
+	u.traversingProgress = 0
+}
+
+func (u *Unit) Die() {
+	fmt.Println("unit died")
+	u.blob.jobs.Complete(u.job)
+
+	delete(u.blob.Units, u.id)
 }

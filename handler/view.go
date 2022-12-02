@@ -97,6 +97,16 @@ func (v *View) getUpdates() bool {
 		}
 	}
 
+	if v.zoom > v.conf.MaxZoom {
+		v.zoom = v.conf.MaxZoom
+		updated = true
+	}
+
+	if v.zoom < v.conf.MinZoom {
+		v.zoom = v.conf.MinZoom
+		updated = true
+	}
+
 	return updated
 }
 

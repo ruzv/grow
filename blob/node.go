@@ -13,8 +13,9 @@ import (
 type ResourceType string
 
 const (
-	ResourceTypeNone ResourceType = ""
-	ResourceTypeMoss ResourceType = "moss"
+	ResourceTypeNone     ResourceType = ""
+	ResourceTypeMoss     ResourceType = "moss"
+	ResourceTypeMushroom ResourceType = "mushroom"
 )
 
 type ResourceConfig struct {
@@ -37,13 +38,15 @@ const (
 	NodeTypeNone                    NodeType = "none"
 	NodeTypeMossFarm                NodeType = "moss_farm"
 	NodeTypeMossFermentationChamber NodeType = "moss_fermentation_chamber"
+	NodeTypeMushroomFarm            NodeType = "mushroom_farm"
+	NodeTypeStorage                 NodeType = "storage"
 )
 
 type NodeConfig struct {
 	Radius           float64              `json:"radius"`
-	ResourceCapacity map[ResourceType]int `json:"resource_capacity"`
-	Consumes         []ResourceType       `json:"consumes"`
-	Produces         []ResourceType       `json:"produces"`
+	ResourceCapacity int                  `json:"resource_capacity"`
+	Consumes         map[ResourceType]int `json:"consumes"`
+	Produces         map[ResourceType]int `json:"produces"`
 	Jobs             []JobType            `json:"jobs"`
 	Graphics         []*render.Primitive  `json:"graphics"`
 }
@@ -147,7 +150,7 @@ func (n *Node) RandPosInNode() pixel.Vec {
 }
 
 func (n *Node) AddResource(resourceType ResourceType) error {
-	if len(n.resources[resourceType]) >= n.conf.ResourceCapacity[resourceType] {
+	if n.AvailableCapacity() <= 0 {
 		return errors.New("resource capacity reached")
 	}
 
@@ -179,13 +182,26 @@ func (n *Node) Consumes() []ResourceType {
 	return consumes
 }
 
-func (n *Node) AvailableCapacity(resourceType ResourceType) int {
-	return n.conf.ResourceCapacity[resourceType] -
-		len(n.resources[resourceType])
+func (n *Node) AvailableCapacity() int {
+	return n.conf.ResourceCapacity - n.AllResourcesCount()
 }
 
-func (n *Node) Resources(resourceType ResourceType) int {
+func (n *Node) ResourceCount(resourceType ResourceType) int {
 	return len(n.resources[resourceType])
+}
+
+func (n *Node) AllResourcesCount() int {
+	count := 0
+
+	for _, resources := range n.resources {
+		count += len(resources)
+	}
+
+	return count
+}
+
+func (n *Node) RemoveResources() {
+	n.resources = make(map[ResourceType][]pixel.Vec)
 }
 
 // func (n *Node) CanConsume() []ResourceType {
@@ -272,4 +288,8 @@ func (j *Job) ToJSON() *JobJSON {
 
 func (j *Job) Complete() error {
 	return j.blob.Nodes[j.nodeID].AddResource(j.conf.ProducedResource)
+}
+
+func (j *Job) CanDo() bool {
+	return j.blob.Nodes[j.nodeID].AvailableCapacity() > 0
 }

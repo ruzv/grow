@@ -24,6 +24,7 @@ const (
 type Editor struct {
 	win  *pixelgl.Window
 	view *View
+	blob *blob.Blob
 
 	mode        EditorMode
 	addNodeType blob.NodeType
@@ -39,14 +40,19 @@ type editorButtons struct {
 	addNodeNone                   *button
 	addNodeMosFarm                *button
 	addNodeMosFermentationChamber *button
+	addNodeMushroomFarm           *button
+	addNodeStorage                *button
 	connectNodes                  *button
 	addUnit                       *button
+	removeUnits                   *button
+	removeResources               *button
 }
 
-func NewEditor(win *pixelgl.Window, view *View) *Editor {
+func NewEditor(win *pixelgl.Window, view *View, b *blob.Blob) *Editor {
 	e := &Editor{
 		win:         win,
 		view:        view,
+		blob:        b,
 		mode:        EditorModeNone,
 		addNodeType: blob.NodeTypeNone,
 		buttons: &editorButtons{
@@ -70,6 +76,16 @@ func NewEditor(win *pixelgl.Window, view *View) *Editor {
 				"mos fermentation chamber",
 				true,
 			),
+			addNodeMushroomFarm: newButton(
+				pixel.V(15, 54),
+				"mushroom farm",
+				true,
+			),
+			addNodeStorage: newButton(
+				pixel.V(10, 66),
+				"storage",
+				true,
+			),
 			connectNodes: newButton(
 				pixel.V(58, 6),
 				"connect nodes",
@@ -80,6 +96,16 @@ func NewEditor(win *pixelgl.Window, view *View) *Editor {
 				"add unit",
 				false,
 			),
+			removeUnits: newButton(
+				pixel.V(170, 6),
+				"remove units",
+				false,
+			),
+			removeResources: newButton(
+				pixel.V(238, 6),
+				"remove resources",
+				false,
+			),
 		},
 	}
 
@@ -88,20 +114,28 @@ func NewEditor(win *pixelgl.Window, view *View) *Editor {
 		e.buttons.addNodeNone,
 		e.buttons.addNodeMosFarm,
 		e.buttons.addNodeMosFermentationChamber,
+		e.buttons.addNodeMushroomFarm,
+		e.buttons.addNodeStorage,
 		e.buttons.connectNodes,
 		e.buttons.addUnit,
+		e.buttons.removeUnits,
+		e.buttons.removeResources,
 	}
 
 	e.buttons.addNode.onClick = func(_ *button) {
 		e.buttons.addNodeNone.hidden = !e.buttons.addNodeNone.hidden
 		e.buttons.addNodeMosFarm.hidden = !e.buttons.addNodeMosFarm.hidden
 		e.buttons.addNodeMosFermentationChamber.hidden = !e.buttons.addNodeMosFermentationChamber.hidden
+		e.buttons.addNodeMushroomFarm.hidden = !e.buttons.addNodeMushroomFarm.hidden
+		e.buttons.addNodeStorage.hidden = !e.buttons.addNodeStorage.hidden
 	}
 
 	e.buttons.addNodeNone.onClick = func(_ *button) {
 		e.buttons.addNodeNone.hidden = true
 		e.buttons.addNodeMosFarm.hidden = true
 		e.buttons.addNodeMosFermentationChamber.hidden = true
+		e.buttons.addNodeMushroomFarm.hidden = true
+		e.buttons.addNodeStorage.hidden = true
 
 		e.mode = EditorModeAddNode
 		e.addNodeType = blob.NodeTypeNone
@@ -111,6 +145,8 @@ func NewEditor(win *pixelgl.Window, view *View) *Editor {
 		e.buttons.addNodeNone.hidden = true
 		e.buttons.addNodeMosFarm.hidden = true
 		e.buttons.addNodeMosFermentationChamber.hidden = true
+		e.buttons.addNodeMushroomFarm.hidden = true
+		e.buttons.addNodeStorage.hidden = true
 
 		e.mode = EditorModeAddNode
 		e.addNodeType = blob.NodeTypeMossFarm
@@ -120,15 +156,41 @@ func NewEditor(win *pixelgl.Window, view *View) *Editor {
 		e.buttons.addNodeNone.hidden = true
 		e.buttons.addNodeMosFarm.hidden = true
 		e.buttons.addNodeMosFermentationChamber.hidden = true
+		e.buttons.addNodeMushroomFarm.hidden = true
+		e.buttons.addNodeStorage.hidden = true
 
 		e.mode = EditorModeAddNode
 		e.addNodeType = blob.NodeTypeMossFermentationChamber
+	}
+
+	e.buttons.addNodeMushroomFarm.onClick = func(_ *button) {
+		e.buttons.addNodeNone.hidden = true
+		e.buttons.addNodeMosFarm.hidden = true
+		e.buttons.addNodeMosFermentationChamber.hidden = true
+		e.buttons.addNodeMushroomFarm.hidden = true
+		e.buttons.addNodeStorage.hidden = true
+
+		e.mode = EditorModeAddNode
+		e.addNodeType = blob.NodeTypeMushroomFarm
+	}
+
+	e.buttons.addNodeStorage.onClick = func(_ *button) {
+		e.buttons.addNodeNone.hidden = true
+		e.buttons.addNodeMosFarm.hidden = true
+		e.buttons.addNodeMosFermentationChamber.hidden = true
+		e.buttons.addNodeMushroomFarm.hidden = true
+		e.buttons.addNodeStorage.hidden = true
+
+		e.mode = EditorModeAddNode
+		e.addNodeType = blob.NodeTypeStorage
 	}
 
 	e.buttons.connectNodes.onClick = func(_ *button) {
 		e.buttons.addNodeNone.hidden = true
 		e.buttons.addNodeMosFarm.hidden = true
 		e.buttons.addNodeMosFermentationChamber.hidden = true
+		e.buttons.addNodeMushroomFarm.hidden = true
+		e.buttons.addNodeStorage.hidden = true
 
 		e.mode = EditorModeConnectNodes
 	}
@@ -137,14 +199,24 @@ func NewEditor(win *pixelgl.Window, view *View) *Editor {
 		e.buttons.addNodeNone.hidden = true
 		e.buttons.addNodeMosFarm.hidden = true
 		e.buttons.addNodeMosFermentationChamber.hidden = true
+		e.buttons.addNodeMushroomFarm.hidden = true
+		e.buttons.addNodeStorage.hidden = true
 
 		e.mode = EditorModeAddUnit
+	}
+
+	e.buttons.removeUnits.onClick = func(_ *button) {
+		e.blob.RemoveUnits()
+	}
+
+	e.buttons.removeResources.onClick = func(_ *button) {
+		e.blob.RemoveResources()
 	}
 
 	return e
 }
 
-func (e *Editor) Update(b *blob.Blob) {
+func (e *Editor) Update() {
 	for _, button := range e.allbuttons {
 		if button.clicked {
 			button.clickCooldown--
@@ -173,10 +245,10 @@ func (e *Editor) Update(b *blob.Blob) {
 	if e.win.JustPressed(pixelgl.MouseButtonLeft) {
 		switch e.mode {
 		case EditorModeAddNode:
-			b.AddNode(e.view.MousePos(), e.addNodeType)
+			e.blob.AddNode(e.view.MousePos(), e.addNodeType)
 		case EditorModeConnectNodes:
 			if !e.targetSet {
-				id, err := b.GetClosestNode(e.view.MousePos())
+				id, err := e.blob.GetClosestNode(e.view.MousePos())
 				if err == nil {
 					e.target = id
 					e.targetSet = true
@@ -185,16 +257,16 @@ func (e *Editor) Update(b *blob.Blob) {
 				return
 			}
 
-			id, err := b.GetClosestNode(e.view.MousePos())
+			id, err := e.blob.GetClosestNode(e.view.MousePos())
 			if err == nil {
-				b.Connect(e.target, id)
+				e.blob.Connect(e.target, id)
 			}
 
 			e.targetSet = false
 		case EditorModeAddUnit:
-			id, err := b.GetClosestNode(e.view.MousePos())
+			id, err := e.blob.GetClosestNode(e.view.MousePos())
 			if err == nil {
-				b.AddUnit(id)
+				e.blob.AddUnit(id)
 			}
 		}
 	}

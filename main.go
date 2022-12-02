@@ -25,7 +25,7 @@ func NewHandler(fps int) (*Handler, error) {
 	win, err := pixelgl.NewWindow(
 		pixelgl.WindowConfig{
 			Title:  "grow",
-			Bounds: pixel.R(0, 0, 600, 600),
+			Bounds: pixel.R(0, 0, 800, 800),
 			VSync:  true,
 		},
 	)
@@ -71,7 +71,7 @@ func run() {
 
 	b := blob.NewBlob(save.Blob, &conf.Blob, h.win)
 	v := handler.NewView(save.View, &conf.View, h.win)
-	e := handler.NewEditor(h.win, v)
+	e := handler.NewEditor(h.win, v, b)
 
 	for !h.win.Closed() {
 		h.win.Clear(color.RGBA{0, 0, 0, 255})
@@ -79,7 +79,7 @@ func run() {
 		e.Render()
 
 		b.Update()
-		e.Update(b)
+		e.Update()
 		v.Update()
 		h.win.Update()
 		h.FrameDelay()

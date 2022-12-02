@@ -9,9 +9,7 @@
         "nodes": {
             "none": {
                 "radius": 15,
-                "resource_capacity": {
-                    "moss": 0
-                },
+                "resource_capacity": 0,
                 "jobs": [],
                 "graphics": [
                     {
@@ -23,11 +21,11 @@
             },
             "moss_farm": {
                 "radius": 25,
-                "resource_capacity": {
-                    "moss": 10
-                },
+                "resource_capacity": 10,
                 "jobs": ["grow_moss", "grow_moss", "grow_moss"],
-                "produces": ["moss"],
+                "produces": {
+                    "moss": 0
+                },
                 "graphics": [
                     {
                         "type": "circle",
@@ -44,10 +42,10 @@
             },
             "moss_fermentation_chamber": {
                 "radius": 20,
-                "resource_capacity": {
-                    "moss": 30
+                "resource_capacity": 20,
+                "consumes": {
+                    "moss": 0
                 },
-                "consumes": ["moss"],
                 "jobs": [],
                 "graphics": [
                     {
@@ -62,12 +60,63 @@
                         "thickness": 3
                     }
                 ]
+            },
+            "mushroom_farm": {
+                "radius": 23,
+                "resource_capacity": 10,
+                "produces": {
+                    "mushroom": 0
+                },
+                "jobs": ["grow_mushroom", "grow_mushroom"],
+                "graphics": [
+                    {
+                        "type": "circle",
+                        "color": { "R": 102, "G": 102, "B": 51, "A": 255 },
+                        "radius": 23
+                    },
+                    {
+                        "type": "circle",
+                        "color": { "R": 107, "G": 61, "B": 10, "A": 255 },
+                        "radius": 23,
+                        "thickness": 4
+                    }
+                ]
+            },
+            "storage": {
+                "radius": 28,
+                "resource_capacity": 30,
+                "consumes": {
+                    "moss": 1,
+                    "mushroom": 1
+                },
+                "produces": {
+                    "moss": 1,
+                    "mushroom": 0
+                },
+                "jobs": [],
+                "graphics": [
+                    {
+                        "type": "circle",
+                        "color": { "R": 255, "G": 204, "B": 102, "A": 255 },
+                        "radius": 28
+                    },
+                    {
+                        "type": "circle",
+                        "color": { "R": 204, "G": 136, "B": 0, "A": 255 },
+                        "radius": 28,
+                        "thickness": 4
+                    }
+                ]
             }
         },
         "jobs": {
             "grow_moss": {
                 "produced_resource": "moss",
                 "production_speed": 0.1
+            },
+            "grow_mushroom": {
+                "produced_resource": "mushroom",
+                "production_speed": 0.2
             }
         },
         "resources": {
@@ -76,10 +125,24 @@
                     {
                         "type": "circle",
                         "color": { "R": 0, "G": 122, "B": 0, "A": 255 },
-                        "radius": 3
+                        "radius": 4
+                    }
+                ]
+            },
+            "mushroom": {
+                "graphics": [
+                    {
+                        "type": "circle",
+                        "color": { "R": 204, "G": 204, "B": 0, "A": 255 },
+                        "radius": 4
                     }
                 ]
             }
+        },
+        "unit": {
+            "traversal_speed": 1,
+            "hunger_rate": 0.03,
+            "max_hunger": 200
         }
     }
 }
